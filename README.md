@@ -4,7 +4,7 @@ encrypting every bit of information on a storage medium (operating system, user 
 
 ## Contributors
 - [Nathan Antonietti](https://github.com/NathanAnto)
-- [Vincent Cordola](https://github.com/VineCor)
+- [Vincent Cordola](https://github.com/VinceCor)
 - [Ünal Külekçi](https://github.com/UnalKulekci)
 - [Filip Siliwoniuk](https://github.com/fylis)
 - [Kevin Voisin](https://github.com/kevivois)
