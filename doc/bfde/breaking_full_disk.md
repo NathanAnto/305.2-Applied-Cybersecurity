@@ -5,7 +5,6 @@ In this document, we will demonstrate how to forensically extract the master key
 For this part, you need to install VirtualBox and Ubuntu Server.
 - Install Ubuntu Server: https://ubuntu.com/download/server
 - Install Virtualbox: https://www.virtualbox.org/
-#### 1.1 Install Linux VM with LUKS encryption
 Create new VM in Virtualbox:
 - OS: Ubuntu Server or DEBIAN
 - RAM: 2-4 GO
@@ -24,6 +23,11 @@ During installation, enable Full Disk Encryption with LUKS.
 The installer automatically configures LUKS + AES on the entire disk.
 
 <img src="images/s1_3.png">
+
+## 2. Start VM and authenticate the user
+1. Start VM, GRUB prompts fot the LUKS passphrase at boot time
+2. Enter passphrase, the system decrypts and mounts the disk
+3. At that precise moment, the AES master key is loaded into RAM.
 
 
 #### Sources
