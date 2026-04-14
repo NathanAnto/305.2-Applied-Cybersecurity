@@ -81,7 +81,57 @@ cec9bbda260556eeeea345c7ebb691aebe1de3850bf9029a4d407608de6a5365
 a0728bfdd01a98cacf8fdc3fe20b21be1d40161d1c1c602fe37df41c04aa6ae3
 f4c9209af40715c2b53ef8ea1fda174848a0719f61ec7e0a5f7b020d78bd4271
 ```
-To find out which key is the right one, we can try them in the next step
+To find out which key is the right one, we can try them in the next step.
+
+## 5. Mount the encrypted disk on a new VM
+For this part, we will use another Ubuntu VM. The goal now is to mount the LUKS volume on a separate analysis machine using the master key directly, without ever knowing the user passphrase.
+
+### 5.1 Analytics VM
+For this part, I'm using a standard Ubuntu installation. https://ubuntu.com/download/desktop
+```bash
+# tools required on the VM
+sudo apt install -y cryptsetup aeskeyfind lvm2 xxd
+```
+
+### 5.2 Set up shared folder between Windows and VM 2
+For this part, I need to retrieve the disk from the other VM. Here’s one way to do it using VirtualBox.
+The goal is therefore to transfer the disk and convert the .vdi file into a RAW image.
+1. On windows create a shared folder (for example: ```C:\forensics```)
+2. In VirtualBox with VM 2 turned off
+    - Click on your VM 2 -> Configuration -> Shared Folders
+    - File path: ```C:\forensics```
+    - Share name: ```forensics```
+    - Check "Automatic Installation" and "Permanent Access"
+
+<img src="images/s1_4.png">
+
+4. Restart the VM and install the guest additions
+    - ```sudo apt install virtualbox-guest-utils virtualbox-guest-additions-iso```
+5. Add your user to the group vboxsf to see the shared folder
+    - ```sudo adduser $USER vboxsf```
+6. Restart and you should see ```/media/sf_forensics```
+
+### 5.3 Convert .vdi file to a RAW image (from windows)
+Before working on the disc, you need to convert it on your computer.
+```bash
+cd "C:\Program Files\Oracle\VirtualBox"
+
+# VM is your Ubuntu Server
+.\VBoxManage.exe clonehd "C:\Users\YourUser\VirtualBox VMs\VM\VM.vdi" "C:\forensics\disc.img" --format RAW
+```
+
+### 5.4 Copy the files to VM 2
+It's better to work on local copies.
+```bash
+# Create work file
+mkdir ~/analysis 
+# Copy the files from the shared folder
+cp /media/sf_forensics/disc.img ~/analysis/
+# Check to see if the copy worked
+ls -lh ~/analysis/
+```
+
+### 5.5 Identify LUKS partition
 
 
 #### Sources
@@ -89,4 +139,8 @@ To find out which key is the right one, we can try them in the next step
 - Install Ubuntu with LUKS Encryption: https://gist.github.com/superjamie/d56d8bc3c9261ad603194726e3fef50f
 - Memory dump: https://cylab.be/blog/99/dump-the-memory-of-a-virtualbox-vm-for-volatility3?accept-cookies=1
 - Understanding AESKeyFind: https://www.siberoloji.com/aeskeyfind-kali-linux-advanced-memory-forensics-aes-key-recovery/
+- cryptsetup: https://man7.org/linux/man-pages/man8/cryptsetup.8.html
+- quick and dirty linux forensics: https://clo.ng/blog/quick_and_dirty_linux_forensics/
+- Cracking LUKS/dm-crypt passphrases: https://diverto.github.io/2019/11/18/Cracking-LUKS-passphrases
+ 
 
