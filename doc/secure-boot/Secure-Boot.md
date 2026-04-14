@@ -20,7 +20,7 @@ The secure boot functionality follows a list of events on any computer.
 1. **Initialization of UEFI Firmware**
 
     UEFI must be enabled in the BIOS settings to start the process.
-    The boot sequence begins with the UEFI firmware activation before the POST hardware check.
+    The boot sequence begins after CPU executes initialization code which is in the ROM. The process starts with the POST to verify hardware, followed with UEFI firmware activation which prepares the system for Secure Boot check.
 
 2. **Verification of Firmware Integrity**
 
@@ -47,8 +47,10 @@ The secure boot functionality follows a list of events on any computer.
 
 5. **Operating System verification**
 
-    The bootloader verify then the integrity of operting system kernel and anz other components before loading them.
+    The bootloader verify then the integrity of operting system kernel and any other components before loading them.
     Bootloaders will prevent the OS from loading if there are any unauthorized changes or malware.
+
+<img src="img/Secure-Boot_Software-Chain-of-Trust.png" width="500">
 
 ## How to enable/disable
 To enable or disable the Secure Boot, enter the BIOS and continue with steps below for each manufacturer.
@@ -93,4 +95,5 @@ To avoid that, user must update their UEFI firmware (BIOS) to a version without 
 ](https://www.geeksforgeeks.org/computer-networks/what-is-secure-boot/)
 - [How to enable Secure Boot on Think branded systems - ThinkPad, ThinkStation, ThinkCentre](https://support.lenovo.com/nz/en/solutions/ht509044-how-to-enable-secure-boot-on-think-branded-systems-thinkpad-thinkstation-thinkcentre)
 - [How to enable Secure Boot (HP)](https://helpdesk.intero-integrity.com/support/solutions/articles/80000622223-how-to-enable-secure-boot-hp-)
+- [Secure Boot Software Chain of Trust](https://www.researchgate.net/profile/Ali-Shuja-Siddiqui/publication/341680580/figure/fig4/AS:895848984616964@1590598450308/Secure-Boot-Software-Chain-of-Trust.png)
 - Gemini
