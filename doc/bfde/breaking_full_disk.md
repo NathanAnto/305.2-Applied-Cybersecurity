@@ -53,8 +53,40 @@ VBoxManage debugvm "bfdee" dumpvmcore --filename \\wsl.localhost\Ubuntu\home\You
 # Your file must be similar size as your VM's memory
 ```
 
+## 4. Scan dump with aeskeyfind
+Install aeskeyfind and then you can run the analysis right away.
+```bash
+aeskeyfind memdump.elf¨
+# You will see
+01160d25cc99e97fb0afb35110efab7507364648d1f7fd77a216dd4981b046c4
+6d5101005903b211313e9cf8270f2510f5ab3a53ae27dfe5c94825677ce9428b
+cec9bbda260556eeeea345c7ebb691aebe1de3850bf9029a4d407608de6a5365
+cec9bbda260556eeeea345c7ebb691aebe1de3850bf9029a4d407608de6a5365
+000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+a0728bfdd01a98cacf8fdc3fe20b21be1d40161d1c1c602fe37df41c04aa6ae3
+a0728bfdd01a98cacf8fdc3fe20b21be1d40161d1c1c602fe37df41c04aa6ae3
+000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+f4c9209af40715c2b53ef8ea1fda174848a0719f61ec7e0a5f7b020d78bd4271
+f4c9209af40715c2b53ef8ea1fda174848a0719f61ec7e0a5f7b020d78bd4271
+000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+Keyfind progress: 100%
+```
+We can see that ```000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f``` this key appears three times, it is a sequential test key (0, 1, 2, 3...) used by the system or cryptographic libraries for internal self-tests. We can ignore it.
+
+All we have left are these keys, some appear twice, which means they are stored in multiple locations in our memory.
+```
+01160d25cc99e97fb0afb35110efab7507364648d1f7fd77a216dd4981b046c4
+6d5101005903b211313e9cf8270f2510f5ab3a53ae27dfe5c94825677ce9428b
+cec9bbda260556eeeea345c7ebb691aebe1de3850bf9029a4d407608de6a5365
+a0728bfdd01a98cacf8fdc3fe20b21be1d40161d1c1c602fe37df41c04aa6ae3
+f4c9209af40715c2b53ef8ea1fda174848a0719f61ec7e0a5f7b020d78bd4271
+```
+To find out which key is the right one, we can try them in the next step
+
+
 #### Sources
 - Official documentation about FDE: https://documentation.ubuntu.com/security/security-features/storage/encryption-full-disk/
 - Install Ubuntu with LUKS Encryption: https://gist.github.com/superjamie/d56d8bc3c9261ad603194726e3fef50f
 - Memory dump: https://cylab.be/blog/99/dump-the-memory-of-a-virtualbox-vm-for-volatility3?accept-cookies=1
+- Understanding AESKeyFind: https://www.siberoloji.com/aeskeyfind-kali-linux-advanced-memory-forensics-aes-key-recovery/
 
