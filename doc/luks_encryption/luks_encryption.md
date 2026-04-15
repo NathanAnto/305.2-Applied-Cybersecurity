@@ -25,7 +25,7 @@ zram0  253:0    0  31.2G  0 disk [SWAP]
 To start the encryption, we need to use the `cryptsetup` command. First, we'll start by formatting our USB partition using that command:
 
 ```sh
-cryptsetup luksFormat -v /dev/sdb1
+sudo cryptsetup luksFormat -v /dev/sdb1
 ```
 
 > [!WARNING]
@@ -36,24 +36,26 @@ It will then ask you to enter a passphrase for the encryption.
 Then we want to "open" our drive. This reads the LUKS header and asks for a password:
 
 ```sh
-cryptsetup open -v /dev/sdb1 my_usb
+sudo cryptsetup open -v /dev/sdb1 my_usb
 ```
 > [!INFO]
 > You can see information about the header using `cryptsetup luksDump /dev/sdX`.
 
 The kernel then creates a new virtual block device at `/dev/mapper/my_usb`. We can then make a filesystem on that block:
 ```sh
-mkfs.ext4 /dev/mapper/my_usb
+sudo mkfs.ext4 /dev/mapper/my_usb
 ```
 
 And then mount (`/mnt/usb` folder needs to be created before):
 ```sh
-mount /dev/mapper/my_usb /mnt/usb
+sudo mount /dev/mapper/my_usb /mnt/usb
 ```
 
 We can now put some files into the USB:
 
 ```sh
+$ sudo chown $(whoami):$(whoami) /mnt/usb
+$ cd /mnt/usb
 $ echo "SECRET INFORMATION" > secret.txt
 $ ls
 lost+found  secret.txt
@@ -64,11 +66,11 @@ SECRET INFORMATION
 Unmount:
 
 ```sh
-umount /mnt/usb
-cryptsetup close my_usb
+sudo umount /mnt/usb
+sudo cryptsetup close my_usb
 ```
 
-Now, anytime you want to mount your USB stick, you should:
+Now, anytime you want to mount your usb stick, you should enter your passphrase when prompted. The exact `cryptsetup` output may vary depending on your system and configuration:
 
 ```sh
 $ sudo cryptsetup open /dev/sdb1 my_usb
