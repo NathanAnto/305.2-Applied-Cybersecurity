@@ -74,7 +74,7 @@ Keyfind progress: 100%
 We can see that ```000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f``` this key appears three times, it is a sequential test key (0, 1, 2, 3...) used by the system or cryptographic libraries for internal self-tests. We can ignore it.
 
 All we have left are these keys, some appear twice, which means they are stored in multiple locations in our memory.
-```
+```bash
 01160d25cc99e97fb0afb35110efab7507364648d1f7fd77a216dd4981b046c4
 6d5101005903b211313e9cf8270f2510f5ab3a53ae27dfe5c94825677ce9428b
 cec9bbda260556eeeea345c7ebb691aebe1de3850bf9029a4d407608de6a5365
@@ -132,7 +132,138 @@ ls -lh ~/analysis/
 ```
 
 ### 5.5 Identify LUKS partition
+```bash
+# See the partition table in the image
+sudo fdisk -l disc.img
+# Sample result
+Device          Start      End      Sectors  Size  Type
+disque.img1      2048      4095      2048     1M   BIOS boot
+disque.img2      4096    2101247   2097152    1G   Linux filesystem
+disque.img3   3805184   42917887  39112704 18.7G   Linux filesystem
+```
+Calculates the offset of the LUKS partition. It is always the largest one, usually the last one.
+- For this example: 3805184 * 512 -> 1948254208
 
+This number will be used in the next step
+
+##### todo: doc details
+
+### 5.6 Associate the partition with a loop device
+```bash
+# Find an available loop device
+sudo losetup -f
+# Create the loop device using the calculated offset (replace offset and loop device with yours)
+sudo losetup -o 1948254208 /dev/loop0 ~/analysis/disc.img
+# Verify that LUKS is detected
+sudo cryptsetup luksDump /dev/loop0
+```
+### 5.7 Test each candidate key
+For each key returned by aeskeyfind, we will test.
+```bash
+# Define the candidate key
+KEY="cec9bbda260556eeeea345c7ebb691aebe1de3850bf9029a4d407608de6a5365"
+
+# Converte the hexadecimal key to a binary file
+echo -n "$KEY" | xxd -r -p > /tmp/masterkey.bin
+
+# Verify that the key is indeed 32 bytes long (AES-256)
+wc -c /tmp/masterkey.bin
+# Must display: 32 /tmp/masterkey.bin
+
+# Attempt to open the LUKS volume using this master key
+sudo cryptsetup luksOpen /dev/loop0 volume_recovered \
+  --master-key-file /tmp/masterkey.bin
+
+
+# If there is no error message, the key is correct, if the key is incorrect, you will see: No key available with this passphrase.
+
+# If you see this error: Cannot read 64 bytes from keyfile /tmp/masterkey.bin. Follow these next steps. If the previous solution worked, proceed to step 5.8.
+
+```
+
+The keys returned by aeskeyfind are 32 bytes (256 bits) long, but LUKS can use a 512-bit key in XTS mode. In AES-XTS mode, the key is actually two concatenated 256-bit keys: one for encryption and one for tweaking.
+- https://crossbowerbt.github.io/xts_mode_tweaking.html
+
+```bash
+# This section is for you if your LUKS partition uses AES-512
+# Check if it user 512
+sudo cryptsetup luksDump /dev/loop9 | grep -i "key\|bits\|size"
+# You should see
+MK bits: 512
+
+# Solution: Concatenate two candidate keys
+```
+Since we have several candidate keys, here is a script that tests all possible:
+```bash
+#!/bin/bash
+
+DEVICE="/dev/loop9"
+MAPNAME="volume_recovered"
+
+KEYS=(
+  "01160d25cc99e97fb0afb35110efab7507364648d1f7fd77a216dd4981b046c4"
+  "6d5101005903b211313e9cf8270f2510f5ab3a53ae27dfe5c94825677ce9428b"
+  "cec9bbda260556eeeea345c7ebb691aebe1de3850bf9029a4d407608de6a5365"
+  "a0728bfdd01a98cacf8fdc3fe20b21be1d40161d1c1c602fe37df41c04aa6ae3"
+  "f4c9209af40715c2b53ef8ea1fda174848a0719f61ec7e0a5f7b020d78bd4271"
+)
+
+echo "Test single keys (32 bytes)"
+for K1 in "${KEYS[@]}"; do
+  echo -n "$K1" | xxd -r -p > /tmp/masterkey.bin
+  echo -n "Trying single K1=${K1:0:8}... : "
+  if sudo cryptsetup luksOpen "$DEVICE" "$MAPNAME" \
+       --master-key-file /tmp/masterkey.bin 2>/dev/null; then
+    echo "SUCCESS!"
+    echo "Key found: ${K1}"
+    exit 0
+  else
+    echo "failed"
+  fi
+done
+
+echo ""
+echo "Test key + itself (64 bytes)"
+for K1 in "${KEYS[@]}"; do
+  echo -n "${K1}${K1}" | xxd -r -p > /tmp/masterkey.bin
+  echo -n "Trying double K1=${K1:0:8}...+same : "
+  if sudo cryptsetup luksOpen "$DEVICE" "$MAPNAME" \
+       --master-key-file /tmp/masterkey.bin 2>/dev/null; then
+    echo "SUCCESS!"
+    echo "Key found: ${K1}${K1}"
+    exit 0
+  else
+    echo "failed"
+  fi
+done
+
+echo ""
+echo "Test all key pair combinations (64 bytes)"
+for K1 in "${KEYS[@]}"; do
+  for K2 in "${KEYS[@]}"; do
+    if [ "$K1" != "$K2" ]; then
+      echo -n "${K1}${K2}" | xxd -r -p > /tmp/masterkey.bin
+      echo -n "Trying K1=${K1:0:8}...+K2=${K2:0:8}... : "
+      if sudo cryptsetup luksOpen "$DEVICE" "$MAPNAME" \
+           --master-key-file /tmp/masterkey.bin 2>/dev/null; then
+        echo "SUCCESS!"
+        echo "Key found: ${K1}${K2}"
+        exit 0
+      else
+        echo "failed"
+      fi
+    fi
+  done
+done
+
+echo ""
+echo "No combination worked."
+```
+save this script and run it:
+```bash
+chmod +x test_keys.sh
+sudo ./test_keys.sh
+```
 
 #### Sources
 - Official documentation about FDE: https://documentation.ubuntu.com/security/security-features/storage/encryption-full-disk/
@@ -142,5 +273,5 @@ ls -lh ~/analysis/
 - cryptsetup: https://man7.org/linux/man-pages/man8/cryptsetup.8.html
 - quick and dirty linux forensics: https://clo.ng/blog/quick_and_dirty_linux_forensics/
 - Cracking LUKS/dm-crypt passphrases: https://diverto.github.io/2019/11/18/Cracking-LUKS-passphrases
- 
+- Tweaking Tweakable AES XTS mode https://crossbowerbt.github.io/xts_mode_tweaking.html
 
