@@ -9,8 +9,8 @@ Then it loads up the first step of the bootloader and loads up his code.
 
 
 ## 2. The Bootloader : GRUB2
-the load up of the Bootloader is too voluminous to be loaded on the first disk sector
-therefore it is separated in 3 sub-steps
+The load up of the Bootloader is too voluminous to be loaded on the first disk sector
+Therefore it is separated in 3 sub-steps
 Current and newest Linux OS use bootloader **GRUB2**
 
 ### 2.1 Stage 1
@@ -22,7 +22,7 @@ Located in the dead empty space just after the MBR, it contains the necessary dr
 ### 2.3 Stage 2
 This is the interactive part of the booloader
 It shows to the user the selection menu of kernel and loads in the RAM two crucials files :
-- The kernel (vmlinuz) :
+- The kernel (vmlinuz) 
 - The initial RAM Disk (initramfs)
 
 ***At this stage, the bootloader only loads these files into memory and then transfers control to the kernel.***
@@ -70,7 +70,7 @@ At this stage:
 - Hardware is detected
 - At this stage, if disk encryption is enabled (e.g. LUKS), the system unlocks the disk:
   - Either by asking the user his password
-  - Or automatically using TPM 2.0, which securely stores and releases the decryption key only if the system boot state is trusted
+  - Or automatically using TPM 2.0, which securely releases the decryption key only if the system boot state is trusted
 
 The goal is to make the real root filesystem accessible
 
@@ -84,16 +84,16 @@ The startup process follows the boot process and brings the Linux computer up to
 ***systemd** is the mother of all processes and its responsible for bringing the Linux host up to a state in which productive work can be done.
 
 sysinit.target: 
-- responsible for mounting filesystems,enable the swap and setup cryptographic services
+- Responsible for mounting filesystems,enable the swap and setup cryptographic services
 
 basic.target:
 - Initialize basic functions like timers,communications sockets,etc...
 
 multi-user.target:
-- it activate the console/terminal mode
+- It activate the console/terminal mode
 
 graphical.target:
-- start the display manager for the GUI
+- Start the display manager for the GUI
 
 # Diagram
 <p align="center">
@@ -103,7 +103,7 @@ graphical.target:
 # Our use case
 We need to activate disk encryption in the boot loading,and find a way to generate our custom disks decrpytion/encryption key that will be encrypted by the TPM secret key.
 We need to find a way to do it automatically :
-    - if the disk encryption is not activate , activate and generate the key and encrypt in a background task (will the computer is on) all the disk content and the swap, theses data will be decrypted on the fly with the decrypt key stored in the RAM (will the computer is on then is ereased)
+    - If the disk encryption is not activate , activate and generate the key and encrypt in a background task (will the computer is on) all the disk content and the swap, theses data will be decrypted on the fly with the decrypt key stored in the RAM (will the computer is on then is ereased)
 
 
 
