@@ -1,8 +1,8 @@
 # LUKS FDE on a USB
 
-To understand how LUKS encrypts an entire disk using a passphrase, I created a small tutorial on how to do it. This shows the simple commands used to encrypt and decrypt a usb key on a linux machine.
+To understand how LUKS encrypts an entire disk using a passphrase, I created a small tutorial on how to do it. This shows the simple commands used to encrypt and decrypt a USB key on a linux machine.
 
-First, after plugging in our usb, we can list the available partitions using `lsblk`:
+First, after plugging in our USB, we can list the available partitions using `lsblk`:
 
 ```sh
 lsblk
@@ -51,7 +51,7 @@ And then mount (`/mnt/usb` folder needs to be created before):
 mount /dev/mapper/my_usb /mnt/usb
 ```
 
-We can now put some files into the usb:
+We can now put some files into the USB:
 
 ```sh
 $ echo "SECRET INFORMATION" > secret.txt
@@ -64,14 +64,14 @@ SECRET INFORMATION
 Unmount:
 
 ```sh
-umount /dev/mapper/my_usb
+umount /mnt/usb
 cryptsetup close my_usb
 ```
 
-Now, anytime you want to mount your usb stick, you should:
+Now, anytime you want to mount your USB stick, you should:
 
 ```sh
-$ sudo cryptsetup open -v --type luks2 /dev/sdb1 my_usb
+$ sudo cryptsetup open /dev/sdb1 my_usb
 No usable token is available.
 Enter passphrase for /dev/sdb1:
 Key slot 0 unlocked.
