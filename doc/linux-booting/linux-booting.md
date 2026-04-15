@@ -22,7 +22,9 @@ Then it loads up the first step of the bootloader and loads up his code.
 
 ## 3. The Bootloader : GRUB2
 The load up of the Bootloader is too voluminous to be loaded on the first disk sector.
+
 Therefore it is separated in 3 sub-steps.
+
 Current and newest Linux OS use bootloader **GRUB2**.
 
 ### 3.1 Stage 1
@@ -113,9 +115,9 @@ graphical.target:
 </p>
 
 # Our use case
-We need to activate disk encryption in the boot loading,and find a way to generate our custom disks decrpytion/encryption key that will be encrypted by the TPM secret key.
+We need to activate disk encryption in the boot loading,and find a way to generate our custom disks decryption/encryption key that will be encrypted by the TPM secret key.
 We need to find a way to do it automatically :
-    - If the disk encryption is not activate , activate and generate the key and encrypt in a background task (will the computer is on) all the disk content and the swap, theses data will be decrypted on the fly with the decrypt key stored in the RAM (will the computer is on then is ereased)
+    - If the disk encryption is not activated , activate it and generate a key and encrypt in a background task all the disks content and the swap, theses data will be decrypted on the fly with the decrypt key stored in the RAM (while the computer is on, then it is ereased)
 
 
 
@@ -125,4 +127,4 @@ We need to find a way to do it automatically :
 - [Linux boot and startup](https://opensource.com/article/17/2/linux-boot-and-startup)
 - [Arch boot process](https://wiki.archlinux.org/title/Arch_boot_process)
 - [Linux illustrated](https://awwkl.github.io/linux_illustrated/boot/boot_UEFI.html#additional-info)
-- [Claude](Claude.ai) : to enhance the initial made-by-hand digram <a href="data/initial_schema.jpg">initial-diagramm</a>
+- [Claude](Claude.ai) : to enhance the initial made-by-hand digram <a href="data/initial_schema.jpg">initial-diagram</a>
