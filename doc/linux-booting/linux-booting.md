@@ -97,7 +97,7 @@ graphical.target:
 
 # Diagram
 <p align="center">
-<img src="schema.jpg" style="width:1000px">
+<img src="data/schema.png" style="width:1000px">
 </p>
 
 # Our use case
