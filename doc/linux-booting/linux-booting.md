@@ -117,7 +117,7 @@ graphical.target:
 # Our use case
 We need to activate disk encryption in the boot loading,and find a way to generate our custom disks decryption/encryption key that will be encrypted by the TPM secret key.
 We need to find a way to do it automatically :
-    - If the disk encryption is not activated , activate it and generate a key and encrypt in a background task all the disks content and the swap, theses data will be decrypted on the fly with the decrypt key stored in the RAM (while the computer is on, then it is ereased)
+    - If the disk encryption is not activated , activate it and generate a key and encrypt in a background task all the disks content and the swap, theses data will be decrypted on the fly with the decrypt key stored in the RAM (while the computer is on, then it is erased)
 
 
 
