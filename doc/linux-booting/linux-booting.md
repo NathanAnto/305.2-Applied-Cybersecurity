@@ -81,7 +81,7 @@ At this stage:
 - Required drivers are loaded (disk, filesystem, etc.)
 - Hardware is detected
 - At this stage, if disk encryption is enabled (e.g. LUKS), the system unlocks the disk:
-  - Either by asking the user his password
+  - Either by asking the user's passphrase.
   - Or automatically using TPM 2.0, which securely releases the decryption key only if the system boot state is trusted
 
 The goal is to make the real root filesystem accessible.
