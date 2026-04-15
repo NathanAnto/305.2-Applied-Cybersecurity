@@ -74,7 +74,6 @@ Now, anytime you want to mount your usb stick, you should enter your passphrase 
 
 ```sh
 $ sudo cryptsetup open /dev/sdb1 my_usb
-No usable token is available.
 Enter passphrase for /dev/sdb1:
 Key slot 0 unlocked.
 Command successful.
