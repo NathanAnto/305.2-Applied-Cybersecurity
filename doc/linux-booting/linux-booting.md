@@ -28,7 +28,7 @@ Therefore it is separated in 3 sub-steps.
 Current and newest Linux OS use bootloader **GRUB2**.
 
 ### 3.1 Stage 1
-A small code of 446 octets located on the MBR (Master Boot Record) is loaded, his role is to locate and load the stape 1.5.
+A small code of 446 octets located on the MBR (Master Boot Record) is loaded, his role is to locate and load the stage 1.5.
 
 ### 3.2 Stage 1.5
 Located in the dead empty space just after the MBR, it contains the necessary drivers to read the filesystem (EXT4,FAT,etc..), it allows the bootloader to understand the disk for then to go look for the root file.
