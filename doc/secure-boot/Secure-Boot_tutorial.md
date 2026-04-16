@@ -1,4 +1,6 @@
 # How to enable/disable
+***By Filip Siliwoniuk - 305.2 : Cybersecurity***
+
 To enable or disable the Secure Boot, enter the BIOS and continue with steps below for each manufacturer.
 
 ## Lenovo
