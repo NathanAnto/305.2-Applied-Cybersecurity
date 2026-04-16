@@ -8,6 +8,10 @@ A **Trusted Platform Module (TPM)** is a secure cryptoprocessor that implements 
 - **Disk encryption** — store disk encryption keys so they are only released when the system is in a trusted state. The TPM seals an encryption key against expected PCR values; at unseal time, if the PCRs still match, the key is released — otherwise the TPM refuses. This is how TPM-backed LUKS auto-unlock works.
 - **Random number generation** — provide a hardware source of entropy for cryptographic operations. The TPM contains a physical noise generator that produces true randomness, unlike software-based PRNGs which are ultimately deterministic.
 
+![TPM Architecture Overview](images/tpm_arc_overview.png)
+
+*The relevant components of this architecture are explained in detail in the following sections.*
+
 The host cannot access the TPM's internal memory directly. We interact with the TPM through the `TPM2_*` command set. To install these tools on Ubuntu:
 
 ```bash
@@ -47,6 +51,10 @@ The five features listed above are independent of each other. The TPM does not n
 **All three together.** The strongest setup combines TPM + Secure Boot + disk encryption. Secure Boot verifies that only trusted software runs, the TPM records and enforces the expected system state, and disk encryption (LUKS/BitLocker) protects data at rest. If any piece of the boot chain is tampered with, the TPM refuses to release the disk encryption key.
 
 ### TPM, Secure Boot, and LUKS in Practice
+
+![VirtualBox TPM 2.0 Settings](images/vrt_box_tpm_step_5.png)
+
+*VirtualBox settings for our Ubuntu VM: TPM Version is set to 2.0, UEFI is enabled, and Secure Boot is checked. All three must be active before installing Ubuntu with LUKS full disk encryption.*
 
 > **Note:** LUKS (Linux Unified Key Setup) is not the same thing as disk encryption — it is one implementation of it, specific to Linux. Other implementations include BitLocker (Windows), FileVault (macOS), and VeraCrypt (cross-platform). We focus on LUKS here because our project runs on Linux.
 
