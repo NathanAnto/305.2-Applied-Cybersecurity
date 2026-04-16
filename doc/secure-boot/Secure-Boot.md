@@ -45,6 +45,13 @@ Here is a detailed explanation of the boot sequence:
 
     If the UEFI is verified as clean, it uses that trust to check the next items in the `Chain of Trust`.
 
+    At the same time as signature checking step is happening, the boot process utilizes a hardware Root of Trust for Measurement (RTM). The **Trusted Platform Module (TPM)** uses specific Platform Configuration Registers (PCRs) to securely store cryptographic hashes (measurements) of these boot components as they load:
+
+    - **PCR 0**: Core System Firmware executable code (Firmware).
+    - **PCR 2**: Extended or pluggable executable code (Option ROMs).
+    - **PCR 4**: Bootloader and additional drivers.
+    - **PCR 7**: Secure Boot state.
+
     1. The **UEFI Firmware** verifies the Bootloader.
     2. The **Bootloader** verifies the Operating System Kernel
     3. The **Kernel** verifies the signed drivers and modules.
@@ -119,4 +126,5 @@ To avoid that, user must update their UEFI firmware (BIOS) to a version without 
 - [Secure Boot Software Chain of Trust](https://www.researchgate.net/profile/Ali-Shuja-Siddiqui/publication/341680580/figure/fig4/AS:895848984616964@1590598450308/Secure-Boot-Software-Chain-of-Trust.png)
 - [Secure Boot Explained](https://medium.com/@sekyourityblog/secure-boot-explained-every-system-boot-is-a-negotiation-of-trust-be32fb023439)
 - [What Secure Boot Is and How Shim Files Work in Linux](https://ufo.hosting/en/blog/what-secure-boot-is-and-how-shim-files-work-in-linux)
+- [UAPI.7 Linux TPM PCR Registr](https://uapi-group.org/specifications/specs/linux_tpm_pcr_registry/)
 - [Gemini](https://gemini.google.com), used for PKfail vulnerability explanation and grammar/orthography check
