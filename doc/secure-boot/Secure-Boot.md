@@ -1,4 +1,6 @@
 # Secure Boot
+***By Filip Siliwoniuk - 305.2 : Cybersecurity***
+
 Secure boot is a security feature to ensure that a device boots using only software that is trusted by the **Original Equipment Manufacturer** (OEM). It supports modern Windows, Linux, etc.
 
 Secure boot initiates a boot sequence process that checks and verifies that only authorized executable files run on the PC.
@@ -9,7 +11,7 @@ To change Secure Boot status, see the tutorial in the [Secure-Boot_tutorial.md](
 ## Advantages of Secure Boot
 - It eliminates the execution of malicious data on our system. It ensures that only authenticated and unaltered components are loaded during the boot process to main system's integrity.
 - It prevents unauthorized modification to the boot process.
-- Secure boot adds a security layer to remote or cloud-based management.
+- Secure boot adds a security layer to remote or cloud-based management, as an image server.
 
 ## Disadvantages of Secure Boot
 - Restricts users from installing alternative operating systems.
