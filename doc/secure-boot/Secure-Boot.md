@@ -3,6 +3,9 @@ Secure boot is a security feature to ensure that a device boots using only softw
 
 Secure boot initiates a boot sequence process that checks and verifies that only authorized executable files run on the PC.
 
+## How to enable/disable
+To change Secure Boot status, see the tutorial in the [Secure-Boot_tutorial.md](Secure-Boot_tutorial.md) file.
+
 ## Advantages of Secure Boot
 - It eliminates the execution of malicious data on our system. It ensures that only authenticated and unaltered components are loaded during the boot process to main system's integrity.
 - It prevents unauthorized modification to the boot process.
@@ -52,31 +55,6 @@ The secure boot functionality follows a list of events on any computer.
     Bootloaders will prevent the OS from loading if there are any unauthorized changes or malware.
 
 <img src="img/Secure-Boot_Software-Chain-of-Trust.png" width="500">
-
-## How to enable/disable
-To enable or disable the Secure Boot, enter the BIOS and continue with steps below for each manufacturer.
-
-### Lenovo
-1. Enter `Security` section.
-
-<img src="img/Secure-Boot_Lenovo_1.png" width="500">
-
-2. Click on `Secure Boot`.
-
-<img src="img/Secure-Boot_Lenovo_2.png" width="500">
-
-3. Save newly updated settings.
-
-### HP
-1. Enter `Advanced` section.
-
-<img src="img/Secure-Boot_HP_1.jpg" width="500">
-
-2. Click on `Secure Boot Configuration`
-
-<img src="img/Secure-Boot_HP_2.jpg" width="500">
-
-3. Save newly updated settings.
 
 ## Secure Boot keys
 Secure Boot is built around a Platform Key (PK) and a Key Exchange Key (KEK) system with a databse of trusted and forbidden signatures.
