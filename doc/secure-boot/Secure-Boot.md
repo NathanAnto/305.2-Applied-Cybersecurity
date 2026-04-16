@@ -20,6 +20,10 @@ To change Secure Boot status, see the tutorial in the [Secure-Boot_tutorial.md](
 ## Boot sequence
 The secure boot functionality follows a list of events on any computer.
 
+<img src="img/Secure-Boot_Software-Chain-of-Trust.png" width="500">
+
+Here is a detailed explanation of the boot sequence:
+
 1. **Initialization of UEFI Firmware**
 
     The boot sequence begins with UEFI code execution on the CPU which is stored in a non-volatile memory chip on the motherboard. After that, the Power-On Self Test (POST) is executed to check the hardware components and ensure they are functioning properly. If any issues are detected, the boot process will end and an error message will be displayed.
@@ -54,8 +58,6 @@ The secure boot functionality follows a list of events on any computer.
     The bootloader then verifies the integrity of operating system kernel and any other components before loading them.
     Bootloaders will prevent the OS from loading if there are any unauthorized changes or malware.
 
-<img src="img/Secure-Boot_Software-Chain-of-Trust.png" width="500">
-
 ## Secure Boot keys
 Secure Boot is built around a Platform Key (PK) and a Key Exchange Key (KEK) system with a databse of trusted and forbidden signatures.
 
@@ -74,13 +76,26 @@ Secure Boot is built around a Platform Key (PK) and a Key Exchange Key (KEK) sys
 - `db`: Holds the list of trusted signatures, certificates and hashes.
 - `dbx`: Holds the list of revoked or blacklisted signatures, certificates and hashes.
 
-## Signing software
+## Signing third-party software
 Public keys of OS vendors (OSVs), such as Microsoft or Linux, are not signed by the PK. Instead, the process works as follwows:
 - OS vendors works with PK owner (OEM or manufacturer) to include their signing keys or certificates in the `db`.
 - This is done at the time of system manufcaturing or setup:
     
     1. OS vendor provides their **public key** or certificate.
     2. PK owner (OEM for example) **authorizes the addition** of the OS vendor's key to the `db` by signing it with the PK. The PK is used to cryptographically sign the **transaction** that updates the `db` or `KEK` allowing the OS vendor's key to be added. 
+
+## Shim
+Microsoft maintains a signing key and public certificate widely recognized in Secure Boot envrionments on consumer devices like laptops and desktops in the UEFI Secure Boot implementation.
+
+To enable Linux distributions to boot on Secure Boot-enabled systems, Microsoft created a small bootloader called **Shim**.
+
+Shim is a small "**bridge**" between Secure Boot and the main Linux bootloader. Shim itself is signed with a key trusted by the firmware, most often a Microsoft signature, because Microsoft's certificates are pre-installed in UEFI on many devices.
+
+Process order:
+
+1. Secure Boot verifies Shim's signature and allows it to execute.
+2. Shim verifies Linux's bootloader signature according to its own rules.
+3. If the test passes, Shim hands control to the Linux bootloader, which then loads the kernel and system.
 
 ## PKfail vulnerability
 Some manufacturers mistakenly included cryptographic **test keys** in their production firmware.
@@ -101,4 +116,5 @@ To avoid that, user must update their UEFI firmware (BIOS) to a version without 
 - [How to enable Secure Boot (HP)](https://helpdesk.intero-integrity.com/support/solutions/articles/80000622223-how-to-enable-secure-boot-hp-)
 - [Secure Boot Software Chain of Trust](https://www.researchgate.net/profile/Ali-Shuja-Siddiqui/publication/341680580/figure/fig4/AS:895848984616964@1590598450308/Secure-Boot-Software-Chain-of-Trust.png)
 - [Secure Boot Explained](https://medium.com/@sekyourityblog/secure-boot-explained-every-system-boot-is-a-negotiation-of-trust-be32fb023439)
+- [What Secure Boot Is and How Shim Files Work in Linux](https://ufo.hosting/en/blog/what-secure-boot-is-and-how-shim-files-work-in-linux)
 - Gemini, used for PKfail vulnerability explanation and grammar/orthography check
