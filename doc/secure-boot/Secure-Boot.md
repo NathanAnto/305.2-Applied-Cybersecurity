@@ -30,24 +30,25 @@ The secure boot functionality follows a list of events on any computer.
 
 3. **Signature checking**
 
-    The boot sequence check the digital signature of the Bootloader and executable files againt a database of trusted signatures.
+    The boot sequence check the digital signature of the Bootloader and executable files against a database of trusted signatures.
 
     The root of trust is a source that is **always trusted** in the system.
+
     If the UEFI is verified as clean, it uses that trust to check the next items in the `Chain of Trust`.
 
     1. The **UEFI Firmware** verifies the Bootloader.
     2. The **Bootloader** verifies the Operating System Kernel
-    3. The **Kernel** verifies the drivers and system files.
+    3. The **Kernel** verifies the signed drivers and modules.
 
     If any component does not match its expected signature, the boot process is stopped.
 
 4. **Loading the Bootloader**
 
-    The UEFI loads the bootloader into the PC's memory. It is as well the stage of initializing the operating system kernel and passing control to it.
+    The UEFI loads the bootloader into the PC's memory. Then the bootloader verifies the the system kernel and gives access to it if is valid.
 
 5. **Operating System verification**
 
-    The bootloader then verifies the integrity of operting system kernel and any other components before loading them.
+    The bootloader then verifies the integrity of operating system kernel and any other components before loading them.
     Bootloaders will prevent the OS from loading if there are any unauthorized changes or malware.
 
 <img src="img/Secure-Boot_Software-Chain-of-Trust.png" width="500">
@@ -77,6 +78,32 @@ To enable or disable the Secure Boot, enter the BIOS and continue with steps bel
 
 3. Save newly updated settings.
 
+## Secure Boot keys
+Secure Boot is built around a Platform Key (PK) and a Key Exchange Key (KEK) system with a databse of trusted and forbidden signatures.
+
+### Platform Key (PK)
+- Top-level key in the UEFI Secure Boot architecture.
+- OEM controls the PK at the time of system manufacture.
+- End users or entreprises can replace the PK if they want the full control of the Secure Boot policy (Our case in this project).
+- Its primary function is to authorize changes to the KEK database. The KEK database is used to authorize updates to the Signature Database (db).
+
+### Key Exchange Key (KEK)
+- Acts as the intermediate authority for managing updates to the trust databases.
+- Enables a flexible and scalable trust model, allowing the PK owner to delegate control to OS vendors or administrators while maintaning the integrity of the Secure Boot process.
+- Supports multiple keys to enable third-party OS or driver vendors to contribute signed software/binaries.
+
+### Signature databases
+- `db`: Holds the list of trusted signatures, certificates and hashes.
+- `dbx`: Holds the list of revoked or blacklisted signatures, certificates and hashes.
+
+## Signing software
+Public keys of OS vendors (OSVs), such as Microsoft or Linux, are not signed by the PK. Instead, the process works as follwows:
+- OS vendors works with PK owner (OEM or manufacturer) to include their signing keys or certificates in the `db`.
+- This is done at the time of system manufcaturing or setup:
+    
+    1. OS vendor provides their **public key** or certificate.
+    2. PK owner (OEM for example) **authorizes the addition** of the OS vendor's key to the `db` by signing it with the PK. The PK is used to cryptographically sign the **transaction** that updates the `db` or `KEK` allowing the OS vendor's key to be added. 
+
 ## PKfail vulnerability
 Some manufacturers mistakenly included cryptographic **test keys** in their production firmware.
 These keys were explicitly labeled **DO NOT SHIP** or **test only** but were leaked publicly on GitHub.
@@ -91,9 +118,9 @@ To avoid that, user must update their UEFI firmware (BIOS) to a version without 
 
 ## Sources
 - [Windows Secure Boot Compromised! What You Need to Know by a Retired Microsoft Engineer](https://www.youtube.com/watch?v=7sYzwb6eUgQ)
-- [GeekForGeeks - What is Secure Boot?
-](https://www.geeksforgeeks.org/computer-networks/what-is-secure-boot/)
+- [GeekForGeeks - What is Secure Boot?](https://www.geeksforgeeks.org/computer-networks/what-is-secure-boot/)
 - [How to enable Secure Boot on Think branded systems - ThinkPad, ThinkStation, ThinkCentre](https://support.lenovo.com/nz/en/solutions/ht509044-how-to-enable-secure-boot-on-think-branded-systems-thinkpad-thinkstation-thinkcentre)
 - [How to enable Secure Boot (HP)](https://helpdesk.intero-integrity.com/support/solutions/articles/80000622223-how-to-enable-secure-boot-hp-)
 - [Secure Boot Software Chain of Trust](https://www.researchgate.net/profile/Ali-Shuja-Siddiqui/publication/341680580/figure/fig4/AS:895848984616964@1590598450308/Secure-Boot-Software-Chain-of-Trust.png)
+- [Secure Boot Explained](https://medium.com/@sekyourityblog/secure-boot-explained-every-system-boot-is-a-negotiation-of-trust-be32fb023439)
 - Gemini, used for PKfail vulnerability explanation and grammar/orthography check
