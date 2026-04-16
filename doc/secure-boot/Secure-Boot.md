@@ -117,4 +117,4 @@ To avoid that, user must update their UEFI firmware (BIOS) to a version without 
 - [Secure Boot Software Chain of Trust](https://www.researchgate.net/profile/Ali-Shuja-Siddiqui/publication/341680580/figure/fig4/AS:895848984616964@1590598450308/Secure-Boot-Software-Chain-of-Trust.png)
 - [Secure Boot Explained](https://medium.com/@sekyourityblog/secure-boot-explained-every-system-boot-is-a-negotiation-of-trust-be32fb023439)
 - [What Secure Boot Is and How Shim Files Work in Linux](https://ufo.hosting/en/blog/what-secure-boot-is-and-how-shim-files-work-in-linux)
-- Gemini, used for PKfail vulnerability explanation and grammar/orthography check
+- [Gemini](https://gemini.google.com), used for PKfail vulnerability explanation and grammar/orthography check
