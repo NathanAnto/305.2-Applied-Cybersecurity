@@ -11,21 +11,21 @@ Create new VM in Virtualbox:
 
 First, create your VM using VirtualBox
 
-<img src="images/s1_1.png">
+<img src="images/s1_1.png" style="width: 800px; height: 400px;">
 
 Specify virtual hardware and select "finish" when you're done 
 
-<img src="images/s1_2.png">
+<img src="images/s1_2.png" style="width: 800px; height: 400px;">
 
 During installation, enable Full Disk Encryption with LUKS.
 - On Ubuntu Select "Set up this disk as an LVM group" and Encrypt the LVM group with LUKS
 
 The installer automatically configures LUKS + AES on the entire disk.
 
-<img src="images/s1_3.png">
+<img src="images/s1_3.png" style="width: 800px; height: 400px;">
 
 ## 2. Start VM and authenticate the user
-1. Start VM, GRUB prompts fot the LUKS passphrase at boot time
+1. Start VM, GRUB prompts for the LUKS passphrase at boot time
 2. Enter passphrase, the system decrypts and mounts the disk
 3. At that precise moment, the AES master key is loaded into RAM.
 
@@ -47,16 +47,17 @@ VBoxManage list runningvms
 
 ### 3.2 Perform a memory dump
 - ```bfdee```: The exact name of the VM
-- ```\\wsl.localhost\Ubuntu\home\YourUser\memdump.elf```: The path where you want to save the dump
+- ```C:\forensics\memdump.elf```: The path where you want to save the dump
 ```bash
 VBoxManage debugvm "bfdee" dumpvmcore --filename C:\forensics\memdump.elf
 # Your file must be similar size as your VM's memory
 ```
 
 ## 4. Scan dump with aeskeyfind
-Install aeskeyfind and then you can run the analysis right away.
+Install aeskeyfind and then you can run the analysis right away. 
+```sudo apt install aeskeyfind```
 ```bash
-aeskeyfind memdump.elf¨
+aeskeyfind memdump.elf
 # You will see
 94c677a283fd76f0da9bdd3a36251a40
 0b7e1b5ffebf527fc5066ac1832caa6f
@@ -84,16 +85,16 @@ The goal is therefore to transfer the disk and convert the .vdi file into a RAW 
     - Share name: ```forensics```
     - Check "Automatic Installation" and "Permanent Access"
 
-<img src="images/s1_4.png">
+<img src="images/s1_4.png" style="width: 750px; height: 400px;">
 
-4. Restart the VM and install the guest additions
+3. Restart the VM and install the guest additions
     - ```sudo apt install virtualbox-guest-utils virtualbox-guest-additions-iso```
-5. Add your user to the group vboxsf to see the shared folder
+4. Add your user to the group vboxsf to see the shared folder
     - ```sudo adduser $USER vboxsf```
-6. Restart and you should see ```/media/sf_forensics```
+5. Restart and you should see ```/media/sf_forensics```
 
 ### 5.3 Convert .vdi file to a RAW image (from windows)
-Before working on the disc, you need to convert it on your computer.
+VirtualBox stores virtual disks in its own proprietary ```.vdi``` format, which cannot be read directly by Linux forensic tools. We need to convert it into a RAW image.
 ```bash
 cd "C:\Program Files\Oracle\VirtualBox"
 
@@ -113,23 +114,26 @@ ls -lh ~/analysis/
 ```
 
 ### 5.5 Identify LUKS partition
+A disk image contains multiple partitions (boot, system, data...). We need to locate precisely which partition holds the LUKS-encrypted volume, and calculate its offset.
+
+Without this offset, tools like ```losetup``` would point to the beginning of the image file rather than the encrypted partition, and ```cryptsetup``` would fail to detect any LUKS header.
 ```bash
 # See the partition table in the image
 sudo fdisk -l disc.img
 # Sample result
 Device          Start      End      Sectors  Size  Type
-disque.img1      2048      4095      2048     1M   BIOS boot
-disque.img2      4096    2101247   2097152    1G   Linux filesystem
-disque.img3   3805184   42917887  39112704 18.7G   Linux filesystem
+disc.img1      2048      4095      2048     1M   BIOS boot
+disc.img2      4096    2101247   2097152    1G   Linux filesystem
+disc.img3   3805184   42917887  39112704 18.7G   Linux filesystem
 ```
-Calculates the offset of the LUKS partition. It is always the largest one, usually the last one.
+Calculate the offset of the LUKS partition. It is always the largest one, usually the last one.
 - For this example: 3805184 * 512 -> 1948254208
 
 This number will be used in the next step
 
-##### todo: doc details
 
 ### 5.6 Associate the partition with a loop device
+Linux cannot mount a raw partition embedded inside an image file directly. A **loop device** acts as a virtual block device, making the extracted partition accessible as if it were a real disk ```(/dev/loop0)```. Once attached, ```cryptsetup``` can interact with it like any physical encrypted drive.
 ```bash
 # Find an available loop device
 sudo losetup -f
@@ -138,16 +142,16 @@ sudo losetup -o 1948254208 /dev/loop0 ~/analysis/disc.img
 # Verify that LUKS is detected
 sudo cryptsetup luksDump /dev/loop0
 ```
-<img src="images/s1_5.png">
+<img src="images/s1_5.png" style="width: 800px; height: 400px;">
 
 ### 5.7 Test each candidate key
-For each key returned by aeskeyfind, we're going to combine them and test them.
+```aeskeyfind``` scans memory for AES key schedules and returns all candidates it finds, not just the LUKS master key. Additionally, LUKS volumes using AES-XTS mode require a 512-bit key composed of two concatenated 256-bit keys (one for encryption, one for tweaking). We therefore need to try combining the candidates in both orders until one successfully unlocks the volume.
 ```bash
 # Define the candidate key
 KEY1="94c677a283fd76f0da9bdd3a36251a40"
 KEY2="0b7e1b5ffebf527fc5066ac1832caa6f"
 
-# Converte the hexadecimal key to a binary file
+# Convert the hexadecimal key to a binary file
 echo -n "${KEY1}${KEY2}" | xxd -r -p > /tmp/masterkey.bin
 
 # Attempt to open the LUKS volume using this master key
@@ -160,11 +164,10 @@ echo -n "${KEY2}${KEY1}" | xxd -r -p > /tmp/masterkey.bin
 
 ```
 From that point on, the disk that was locked with a passphrase will be available.
-<img src="images/s1_6.png">
+<img src="images/s1_6.png" style="width: 800px; height: 400px;">
 
 
-
-#### Sources
+## Sources
 - Official documentation about FDE: https://documentation.ubuntu.com/security/security-features/storage/encryption-full-disk/
 - Install Ubuntu with LUKS Encryption: https://gist.github.com/superjamie/d56d8bc3c9261ad603194726e3fef50f
 - Memory dump: https://cylab.be/blog/99/dump-the-memory-of-a-virtualbox-vm-for-volatility3?accept-cookies=1
@@ -173,3 +176,5 @@ From that point on, the disk that was locked with a passphrase will be available
 - quick and dirty linux forensics: https://clo.ng/blog/quick_and_dirty_linux_forensics/
 - Cracking LUKS/dm-crypt passphrases: https://diverto.github.io/2019/11/18/Cracking-LUKS-passphrases
 - The keys returned by aeskeyfind are 32 bytes (256 bits) long, but LUKS 2 can use a 512-bit key in XTS mode. In AES-XTS mode, the key is actually two concatenated 256-bit keys: one for encryption and one for tweaking. https://crossbowerbt.github.io/xts_mode_tweaking.html
+- Breaking LUKS2: https://blog.elcomsoft.com/2022/08/probing-linux-disk-encryption-luks2-argon-2-and-gpu-acceleration/
+- Claude ai: Help with getting a general idea of how to implement this
