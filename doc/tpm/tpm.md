@@ -50,7 +50,7 @@ The five features listed above are independent of each other. The TPM does not n
 
 **All three together.** The strongest setup combines TPM + Secure Boot + disk encryption. Secure Boot verifies that only trusted software runs, the TPM records and enforces the expected system state, and disk encryption (LUKS/BitLocker) protects data at rest. If any piece of the boot chain is tampered with, the TPM refuses to release the disk encryption key.
 
-### TPM, Secure Boot, and LUKS in Practice
+### The Trust Chain: From Boot to Disk Unlock
 
 ![VirtualBox TPM 2.0 Settings](images/vrt_box_tpm_step_5.png)
 
@@ -58,7 +58,73 @@ The five features listed above are independent of each other. The TPM does not n
 
 > **Note:** LUKS (Linux Unified Key Setup) is not the same thing as disk encryption — it is one implementation of it, specific to Linux. Other implementations include BitLocker (Windows), FileVault (macOS), and VeraCrypt (cross-platform). We focus on LUKS here because our project runs on Linux.
 
-Secure Boot continues the trust chain that starts with the CRTM. At each stage (CRTM → firmware → bootloader → kernel) the next component is verified before it runs, and the results are written to PCR registers in the TPM. The LUKS disk encryption key is then sealed by the TPM against these PCR values. At boot, if the PCRs match the expected values the key is released and the disk is unlocked; if they do not match, the TPM refuses to hand over the key. In short: Secure Boot measures and records, LUKS looks at those records to unlock or refuse.
+```
+┌──────────┐       ┌──────────────┐       ┌────────────────┐       ┌──────────┐
+│          │       │              │       │                │       │          │
+│   CRTM   │──────▶│   Firmware   │──────▶│   Bootloader   │──────▶│  Kernel  │
+│          │       │   (UEFI)     │       │  (GRUB/shim)   │       │          │
+└─────┬────┘       └──────┬───────┘       └───────┬────────┘       └─────┬────┘
+      │                   │                       │                      │
+      │ hash              │ hash + verify         │ hash + verify        │ hash
+      ▼                   ▼                       ▼                      ▼
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                │
+│                         TPM  ─  PCR Registers                                  │
+│                  (all measurements accumulated here)                           │
+│                                                                                │
+└───────────────────────────────────┬────────────────────────────────────────────┘
+                                    │
+                          PCRs match expected?
+                                    │
+                       ┌────────────┴────────────┐
+                       ▼                         ▼
+                ┌─────────────┐          ┌──────────────┐
+                │     YES     │          │      NO      │
+                │             │          │              │
+                │ TPM releases│          │ TPM refuses. │
+                │  LUKS key   │          │ Disk stays   │
+                │             │          │   locked.    │
+                └──────┬──────┘          └──────────────┘
+                       ▼
+                ┌─────────────┐
+                │             │
+                │ Disk unlock │
+                │             │
+                └─────────────┘
+```
+
+Each stage hashes the next before passing control. Secure Boot additionally **verifies** signatures at each step. The TPM seals the LUKS key against these accumulated measurements — if any stage is tampered with, the PCR values change and the key is never released.
+
+### TPM + LUKS: System Lifecycle
+
+> **Sealing** means giving data to the TPM and saying "store this, only give it back when the PCR values match what they are right now." The TPM locks (seals) the data; later it unlocks (unseals) it — but only if the system state has not changed. **Enrollment** is the one-time process of sealing a key into the TPM and registering it in the LUKS header, so that the two can work together from that point on.
+
+The project description defines two distinct states for a TPM-backed encrypted system:
+
+**1. Provisioning (enrollment)**
+
+The disk is already encrypted with LUKS but the TPM is not yet involved — the user must type a passphrase at every boot. Enrollment connects the two: a random key is generated, sealed into the TPM against the current PCR values, and written into a new LUKS keyslot + token. The existing passphrase keyslot is left untouched.
+
+```bash
+sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/sda3
+```
+
+```
+Before:                                  After:
+┌─────────────────────────┐              ┌─────────────────────────┐
+│ Keyslot 0: passphrase   │              │ Keyslot 0: passphrase   │ (untouched)
+│ Keyslot 1: (empty)      │              │ Keyslot 1: TPM-sealed   │ (new)
+│ Tokens:    (empty)       │              │ Tokens:    systemd-tpm2 │ (new)
+└─────────────────────────┘              └─────────────────────────┘
+```
+
+**2. Automated decryption (every subsequent boot)**
+
+At boot, systemd reads the token from the LUKS header, asks the TPM to unseal the key, and if the PCR values match, the disk is unlocked without a passphrase. If the PCRs do not match (e.g. the boot chain was tampered with), the TPM refuses and the system falls back to asking the user for a passphrase.
+
+**3. After unseal: the key is in RAM**
+
+Once the TPM releases the key and it is handed to dm-crypt, it sits in RAM like any other data — the TPM's protection ends at that point. This means TPM sealing protects against **offline disk theft** (the disk cannot be opened on a different machine) but does **not** protect against a memory dump attack on the running system. The `aeskeyfind` attack described in the "Breaking FDE" phase of this project works exactly the same way on a TPM-unlocked system — because the key is still in RAM.
 
 
 ## Glossary
@@ -75,6 +141,18 @@ Secure Boot continues the trust chain that starts with the CRTM. At each stage (
 - **Sealing / Unsealing** — The TPM operations that wrap data under a policy and later release it only if that policy (e.g., expected PCR values) still holds; used to bind a secret to a specific platform state.
 - **LUKS** — Linux Unified Key Setup. A disk encryption standard for Linux that uses `dm-crypt` as its backend.
 
+## Summary: What TPM Does and Does Not Do
+
+> **TODO:** This section is a draft and will be revised after the TPM workflow is fully explained.
+
+The TPM is not a firewall — it does not block anything. It works more like a **notary**: it records what happened, but does not stop it from happening.
+
+- The TPM **does not prevent** a malicious bootloader from running — if someone tampers with the boot chain, the system still boots.
+- But the TPM **accurately records** what happened — the PCR values change and that change is detectable.
+- The TPM **does not decide** what to do about it — that decision belongs to another mechanism (e.g., a sealing policy refuses to release the LUKS key, or a remote server denies access after checking a quote).
+
+In short: the TPM says "I won't stop you, but I will tell everyone what you did." The enforcement happens elsewhere.
+
 ## Sources
 
 - [ArchWiki — Trusted Platform Module](https://wiki.archlinux.org/title/Trusted_Platform_Module)
@@ -82,3 +160,4 @@ Secure Boot continues the trust chain that starts with the CRTM. At each stage (
 - [Wikipedia — Linux Unified Key Setup](https://en.wikipedia.org/wiki/Linux_Unified_Key_Setup)
 - [TCG — TPM 2.0 Keys for Device Identity and Attestation](https://trustedcomputinggroup.org/wp-content/uploads/TPM-2p0-Keys-for-Device-Identity-and-Attestation_v1_r12_pub10082021.pdf)
 - [Red Hat — Encrypting Block Devices Using LUKS](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/security_hardening/encrypting-block-devices-using-luks_security-hardening)
+- [TCG — TPM 2.0 Library Part 0: Introduction (official spec)](https://trustedcomputinggroup.org/wp-content/uploads/Trusted-Platform-Module-2.0-Library-Part-0-Introduction_Version-185_pub.pdf) — for a deeper look at TPM internals (certification, attestation hierarchy, integrity measurement, protected locations)
