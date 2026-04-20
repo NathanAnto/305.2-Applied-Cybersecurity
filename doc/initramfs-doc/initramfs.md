@@ -37,22 +37,59 @@ Their purposes is to:
     - decrypt your disk
 They can be found in two places /usr/share/initramfs-tools/scripts/ and /etc/initramfs-tools/scripts.
 
-They are separated in 3 folders :
-- **local-top**:
-These scripts are executed instantly after the start of initramfs
-They are used to loads specific models, low-level
-for example to setup minimal hardware
-- **local-premount**:
-These scripts are executed just before the mount of the root filesystem
-They are used to connect to the wifi
-call an API or an KMS securly/to get a decryption key
-to unlock / decrypt filesystem
-- **local-bootm**:
-These scripts are exectued after the mount of the roof filesystem, just before the transition to the real OS
-They are used to cleanup temporary files,disable network if needed,final security check before the handover to the OS
+They are separated in 7 folders :
+- **init-top**:  
+These scripts are executed at the very beginning of initramfs  
+They run right after `/proc` and `/sys` are mounted  
+They are used to initialize the early userspace environment  
+for example starting **udev** to populate `/dev`  
+
+---
+
+- **init-premount**:  
+These scripts are executed after kernel modules are loaded  
+They are used to prepare the system before accessing the root device  
+for example loading extra drivers or preparing early networking  
+
+---
+
+- **local-top**:  
+These scripts are executed before the root device is available  
+They are used to prepare access to local storage  
+for example assembling RAID (`mdadm`) or unlocking encrypted disks (`cryptroot`)  
+
+---
+
+- **local-block**:  
+These scripts are executed repeatedly for block devices  
+They are used to ensure required device nodes exist  
+for example waiting for a disk to appear or retrying detection  
+
+---
+
+- **local-premount**:  
+These scripts are executed just before mounting the root filesystem  
+They are used to finalize access to the root device  
+for example connecting to WiFi, calling an API or KMS to retrieve a key,  
+and unlocking/decrypting the filesystem  
+
+---
+
+- **local-bottom**:  
+These scripts are executed right after the root filesystem is mounted  
+They are used for final adjustments before switching to the real system  
+for example cleaning temporary setup or preparing the environment  
+
+---
+
+- **init-bottom**:  
+These scripts are executed at the very end of initramfs  
+They run just before switching to the real root filesystem  
+They are used to stop early services (like **udev**)  
+and finalize the transition to the main OS  
 
 
-You can see more about [here](https://manpages.ubuntu.com/manpages/jammy/man7/initramfs-tools.7.html#boot-scripts)
+You can see more about [here](https://manpages.ubuntu.com/manpages/jammy/man7/initramfs-tools.7.html#boot-scripts) and [here](https://www.ullright.org/ullWiki/show/initramfs-tools)
 
 
 ## Configuration files
