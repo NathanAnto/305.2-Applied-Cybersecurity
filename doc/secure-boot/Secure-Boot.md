@@ -5,6 +5,36 @@ Secure boot is a security feature to ensure that a device boots using only softw
 
 Secure boot initiates a boot sequence process that checks and verifies that only authorized executable files run on the PC.
 
+## Diagram of key/signature and certificate exchange in Secure Boot
+
+```mermaid
+graph TD
+    A[Power On] --> B[Firmware Root of Trust]
+    B --> C{Check PK integrity?}
+    
+    C -- Pass --> D[Load KEK & db/dbx Databases]
+    C -- Fail --> ERR[Security Halt: Tampered BIOS]
+    
+    D --> E{Image in dbx?}
+    E -- Yes --> ERR2[Boot Blocked: Revoked Software]
+    
+    E -- No --> F{Image in db?}
+    F -- No --> G[OEM Recovery Mode]
+    
+    F -- Yes --> H[Windows Boot Manager Starts]
+    
+    H --> I{Verify Kernel via CA Signature}
+    I -- Pass --> J[Load ELAM & Drivers]
+    I -- Fail --> K[Windows Recovery]
+    
+    J --> L[Celebrate: OS Fully Loaded]
+    
+    %% Measured Boot Parallel
+    B -.-> TPM[(TPM: Record the Chain)]
+    H -.-> TPM
+    L -.-> TPM
+```
+
 ## How to enable/disable
 To change Secure Boot status, see the tutorial in the [Secure-Boot_tutorial.md](Secure-Boot_tutorial.md) file.
 
