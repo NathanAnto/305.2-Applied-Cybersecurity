@@ -42,6 +42,67 @@ On the client side:
 - Firewall: Only the KMS port is open from the user VLAN.
 - MAC/IP filtering: Prevents unauthorized access.
 
+# 4. Securing the KMS server
+
+## 4.1 TLS Authentication
+Every communication between a client device and the KMS is protected by TLS
+- The KMS server has a certificate signed by the internal CA.
+- Each client device has a unique client certificate issued during enrollment.
+- When a post is revoked, its certificate is revoked, preventing any future authentication.
+
+## 4.2 Key Management
+- Key rotation: can be performed at any time via the KMS without requiring any action on the endpoints.
+
+## 4.3 Auditing
+- OpenBao audit log: every request is logged
+- Alerts for repeated authentication failures
+
+# 5. Process for enrolling a new computer
+Enrollment is the process by which a blank device (or an existing unencrypted device) is integrated into the KMS infrastructure. 
+
+## 5.1 Enrollment process
+1. Blank post starts
+2. The enrollment script generates a random LUKS key
+3. The disk is encrypted with this key (cryptsetup luksFormat)
+4. The key is sent and stored on the KMS
+5. The KMS returns a token 
+6. The initramfs is configured with the token (Clevis PIN OpenBao)
+7. The local LUKS key is deleted, only the KMS holds it
+8. Restart -> normal boot sequence
+
+## 5.2 Certificate management
+- Each device receives a unique certificate during enrollment, signed by the internal CA.
+- The certificate's Common Name (CN) identifies the computer
+
+# 6. Workstation startup process
+
+## 6.1 Boot sequence
+1. BIOS/UEFI boots
+2. GRUB loads the kernel and initramfs
+3. When initramfs runs, Clevis attempts a network request to the KMS
+4. KMS accessible + authentication OK -> LUKS key returned
+4. KMS unreachable or authentication denied -> STOP, workstation inaccessible
+5. cryptsetup decrypts the LUKS volume using the key provided
+6. Mounting the root filesystem
+
+# 7. High Availability
+
+# 7.1 KMS redundancy
+The KMS is a single point of failure.
+
+- One active OpenBao server + one standby server ready to take over manually.
+
+# 7.2 Emergency procedure
+In the event of an irreparable failure of the KMS, the workstations will no longer be able to boot up. A emergency plan must be established.
+
+Option 1 local key:
+- During enrollment, a LUKS recovery key is generated and stored in a physical safe.
+- If the KMS fails, the administrator can manually enter this key during startup.
+Option 2 KMS snapshot:
+- Encrypted backups of the OpenBao state 
+- Restoration is possible on a new server 
+
+
 ## Sources
 
 - Security architecture basics:  https://www.future-processing.com/blog/security-architecture-101-understanding-the-basics/
