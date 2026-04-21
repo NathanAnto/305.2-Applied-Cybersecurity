@@ -103,6 +103,9 @@ Option 2 KMS snapshot:
 - Restoration is possible on a new server 
 
 
+
+<img src="images/kms_topology.png">
+
 ## Sources
 
 - Security architecture basics:  https://www.future-processing.com/blog/security-architecture-101-understanding-the-basics/
