@@ -40,21 +40,14 @@ The MVP demonstrates the core principle of the solution: a LUKS-encrypted workst
 
 ## 2. Deployed Components
 
-The MVP relies on two well-established open source components, simple to deploy and well suited for a proof-of-concept environment.
+The MVP relies on two well-established open source components, simple to deploy.
 
-### 2.1 KMS Server — Tang
+### 2.1 KMS Server Tang
 
 Tang is a lightweight key derivation server designed specifically for network-based LUKS decryption. It never stores the LUKS key directly: it participates in a cryptographic exchange (McCallum-Relyea protocol) that allows the client to reconstruct its key only in the presence of the server.
 
-**KMS Server — Tang**
-```
-→  tang daemon (HTTP on port 7500)
-→  Tang encryption key pair (generated at install time)
-→  No database — stateless server side
-→  Revocation: delete Tang key files + restart the service
-```
 
-### 2.2 Client — Clevis + LUKS2
+### 2.2 Client Clevis + LUKS2
 
 Clevis is the client component that integrates into the workstation's initramfs. At boot time, it automatically contacts the Tang server to reconstruct the LUKS key and unlock the root volume. No key is ever stored in plaintext on disk.
 
@@ -76,7 +69,7 @@ The MVP connects two machines directly on the same local network. No intermediat
 
 ![mvp_archi](images/mvp_arch.png)
 
-> **Tang does not store the LUKS key.** It generates an asymmetric key pair and participates in a cryptographic exchange (McCallum-Relyea protocol). Only a client holding the correct token can reconstruct the key — without ever transmitting it in plaintext over the network.
+> **Tang does not store the LUKS key.** It generates an asymmetric key pair and participates in a cryptographic exchange (McCallum-Relyea protocol). Only a client holding the correct token can reconstruct the key, without ever transmitting it in plaintext over the network.
 
 ---
 
@@ -86,13 +79,13 @@ Enrollment is the one-time procedure by which a blank workstation is integrated 
 
 | Step | Action |
 |---|---|
-| **1** | Workstation boots on a live OS (or the unencrypted target OS) |
+| **1** | Workstation boots |
 | **2** | The enrollment script generates a random LUKS key |
-| **3** | The disk is encrypted with this key (`cryptsetup luksFormat`) |
+| **3** | The disk is encrypted with this key |
 | **4** | Clevis is configured with the Tang server IP address |
-| **5** | Clevis contacts Tang (HTTP) and binds the token to the LUKS key (`clevis luks bind`) |
-| **6** | The initial LUKS key is removed from the slot — only Tang can now unlock the volume |
-| **7** | The initramfs is regenerated with Clevis embedded (`dracut` or `update-initramfs`) |
+| **5** | Clevis contacts Tang (HTTP) and binds the LUKS key |
+| **6** | The initial LUKS key is removed from the slot, only Tang can now unlock the volume |
+| **7** | The initramfs is regenerated with Clevis embedded |
 | **8** | Reboot → normal boot sequence |
 
 ---
@@ -113,17 +106,16 @@ At every startup, the following sequence is executed automatically by the initra
          │
          └─ KMS unreachable ─► Clevis fails
             or not enrolled    ► cryptsetup cannot unlock the volume
-                               ► Boot stops — disk remains inaccessible
+                               ► Boot stops, disk remains inaccessible
 ```
 
-> **KMS unreachable or workstation not enrolled:**
-> Clevis fails → cryptsetup cannot unlock the volume → boot stops. The disk remains inaccessible.
 
 ---
 
 ## 6. Workstation Revocation
 
 In the MVP, revocation is simple and immediate. The administrator deletes the Tang keys on the server. On the next boot attempt, the client workstation can no longer reconstruct its LUKS key. But none of the workstations will be able to connect anymore
+
 ---
 
 ## 7. MVP Limitations and Planned Evolutions
