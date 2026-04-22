@@ -13,7 +13,7 @@ The solution is based on two complementary pillars:
 - Traceability: Every decryption attempt is logged on the KMS side.
 - Scalability: Adding new workstations follows a standardized process (enrollment).
 
-# 2. KMS solution (temporary: OpenBao)
+# 2. KMS solution
 OpenBao is an open-source community fork of HashiCorp Vault, maintained under the governance of the Linux Foundation (LF Edge). It retains all of Vault's features while remaining licensed under the MPL 2.0, with no commercial restrictions.
 
 # 2.1 Integration with LUKS via Clevis
@@ -23,8 +23,6 @@ Clevis is the client-side component that acts as the bridge between OpenBao and 
 
 ## 3.1 Overview
 The architecture is based on a strict client-server topology. Client machines never store the LUKS key in plain text on disk. The key is transmitted exclusively by the KMS during boot, via a TLS-encrypted channel.
-<img src="images/global_architecture.png">
-No KMS response → initramfs halts → workstation unreachable
 
 ## 3.2 Deployed components
 On the KMS server side:
