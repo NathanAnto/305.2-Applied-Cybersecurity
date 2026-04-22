@@ -7,6 +7,11 @@ Secure boot initiates a boot sequence process that checks and verifies that only
 
 ## Diagram of key/signature and certificate exchange in Secure Boot
 
+1. The Root of Trust contins the Root Certificate pre-installed by the OEM (Microsoft or PC manufcaturer).
+2. Then, the hardware looks at the bootloader's Digital Certificate and checks if it was signed by the Root Certificate.
+3. Once the certificate is verified as "trusted", the hardware uses the public key inside the ceritifcate to verify the Digital Signature of the bootloader file (Checking if it was not tampered with).
+4. The bootloader then does the exact same for the OS kernel. Then the kernel does it for drivers.
+
 ```mermaid
 graph TD
     A[Power On] --> B[Firmware Root of Trust]
