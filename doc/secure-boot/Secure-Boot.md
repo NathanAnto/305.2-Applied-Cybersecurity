@@ -157,4 +157,4 @@ To avoid that, user must update their UEFI firmware (BIOS) to a version without 
 - [Secure Boot Explained](https://medium.com/@sekyourityblog/secure-boot-explained-every-system-boot-is-a-negotiation-of-trust-be32fb023439)
 - [What Secure Boot Is and How Shim Files Work in Linux](https://ufo.hosting/en/blog/what-secure-boot-is-and-how-shim-files-work-in-linux)
 - [UAPI.7 Linux TPM PCR Registr](https://uapi-group.org/specifications/specs/linux_tpm_pcr_registry/)
-- [Gemini](https://gemini.google.com), used for PKfail vulnerability explanation and grammar/orthography check
+- [Gemini](https://gemini.google.com), used for PKfail vulnerability explanation and grammar/orthography check and the Mermaid.js diagram.
