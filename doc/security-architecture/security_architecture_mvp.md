@@ -7,8 +7,8 @@
 | **Scope** | 1 KMS server (Tang) + 1 client workstation |
 | **Encryption** | LUKS2 |
 | **KMS Client** | Clevis (PIN tang) |
-| **Transport** | Plain HTTP (no TLS — MVP only) |
-| **Enrollment** | Manual script — key generation and registration on the KMS |
+| **Transport** | Plain HTTP (no TLS, MVP only) |
+| **Enrollment** | Manual script, key generation and registration on the KMS |
 | **Revocation** | Manual deletion of the key on the Tang server |
 
 > **MVP objective:** *"Boot a PC only if an external service (KMS) is reachable and holds the decryption key."*
@@ -30,7 +30,7 @@ The MVP demonstrates the core principle of the solution: a LUKS-encrypted workst
 
 ### 1.2 What the MVP does not cover (yet)
 
-- Secure transport (no TLS — plain HTTP only)
+- Secure transport (no TLS, plain HTTP only)
 - Mutual authentication / client certificates
 - Dedicated VLAN or network isolation
 - KMS high availability
