@@ -33,7 +33,7 @@ You can see more about [here](https://manpages.ubuntu.com/manpages/jammy/man7/in
 These are included in the initramfs image and normally executed during kernel boot in the early user-space before the root partition has been mounted.
 Their purposes is to:
     - execute some code
-    - Call a KMS (Hashicorp,openBAO,Tang)
+    - Call a KMS/Server (Hashicorp,openBAO,Tang)
     - decrypt your disk
 They can be found in two places /usr/share/initramfs-tools/scripts/ and /etc/initramfs-tools/scripts.
 
@@ -41,8 +41,10 @@ They are separated in 7 folders :
 - **init-top**:  
 These scripts are executed at the very beginning of initramfs  
 They run right after `/proc` and `/sys` are mounted  
-They are used to initialize the early userspace environment  
-for example starting **udev** to populate `/dev`  
+They are used to initialize the early userspace environment  'donc i
+for example starting **udev** to populate `/dev`
+
+*note : **udev** is the system that handles peripherals on ubuntu*
 
 ---
 
@@ -56,7 +58,7 @@ for example loading extra drivers or preparing early networking
 - **local-top**:  
 These scripts are executed before the root device is available  
 They are used to prepare access to local storage  
-for example assembling RAID (`mdadm`) or unlocking encrypted disks (`cryptroot`)  
+for example unlocking encrypted disks (`cryptroot`)  
 
 ---
 
@@ -71,7 +73,7 @@ for example waiting for a disk to appear or retrying detection
 These scripts are executed just before mounting the root filesystem  
 They are used to finalize access to the root device  
 for example connecting to WiFi, calling an API or KMS to retrieve a key,  
-and unlocking/decrypting the filesystem  
+and unlocking/decrypting the filesystem with this key 
 
 ---
 
@@ -107,41 +109,36 @@ They are device drivers which may be loaded into the running kernel to extend it
 
 For example :
 - *Network modules*: used to detect wifi card,enable network interface
-- *Storate modules*: used to detect disks,access LUKS encrypted partitions
+- *Storage modules*: used to detect disks,access LUKS encrypted partitions
 
 You can see more about [here](https://kernel-team.pages.debian.net/kernel-handbook/ch-modules.html) and [here](https://wiki.archlinux.org/title/Kernel_module)
 
 
 
-## Tutorials & Commands
-First you need to install the required packages to update / modify initramfs :
+## Setup Clevis+Tang LUKS encryption
 
-```bash
-sudo apt update
-sudo apt install initramfs-tools cryptsetup curl jq wpasupplicant
-```
+***We assume here that the computer is already LUKS encrypted from the os installation configuration.***
 
-*initramfs-tools* : Package used to modify/customize our initramfs in a secure way
-*cryptsetup*: Package used for disk encryption/decryption
-*curl*: Package used to call an API (f.e retrieving KMS key)
-*jq*: a command-line tool Package to parse,filter,and extract data from JSON
-*wpasupplicant*: a low-level WIFI authentification daemon Package
+The [script.sh](../../scripts/CLEVIS-LUKS/script.sh) file is the startpoint.
 
-### Adding required tools
-
-Create a file named `base-tools` in the folder `/etc/initramfs-tools/hooks/`
-These file will contains the packages fetching for the WIFI,KMS key retrieving,
+It modify and update the initramfs and add the script [clevis-network](../../scripts/CLEVIS-LUKS/clevis-network.sh) in the correct directory of the initramfs, this script will setup the necessary network libraries so that the initramfs can access the TANG server which is used for the handshake with clevis.
 
 
+Also,The [script.sh](../../scripts/CLEVIS-LUKS/script.sh) file handles the static IP configuration.
+It also install the required libraires and setup clevis binding with the TANG sever
 
+Then we make the initramfs persistent by using `
+update-initramfs -u -k all` in the terminal
 
+The [clean.sh](../../scripts/CLEVIS-LUKS/clean.sh) is used to clean the custom files in the initramfs , don't forget to unbind the tang-server from clevis (if necessary)
 
+## Does a OS Update overwrite custom initramfs modification ?
 
+The files that are manually placed in /etc/initramfs-tools are preserved across OS updates. When the initramfs is rebuilt (e.g., after an update), these files such as the scripts and hooks used in our solution, are automatically included again, so this is not an issue.
 
+We use certain PCRs (PCR 7) for Clevis + Tang verification to determine whether decryption is allowed. However, after a system update, some PCR values may change, which can prevent Clevis from successfully decrypting the disk.
 
-
-## Does a Ubuntu OS Update overwrite custom initramfs ?
-
+Therefore, we may need to disable or carefully manage updates that affect Secure Boot and PCR values on the client machine.
 
 ## Sources
 
