@@ -5,6 +5,41 @@ Secure boot is a security feature to ensure that a device boots using only softw
 
 Secure boot initiates a boot sequence process that checks and verifies that only authorized executable files run on the PC.
 
+## Diagram of key/signature and certificate exchange in Secure Boot
+
+1. The Root of Trust contains the Root Certificate pre-installed by the OEM (Microsoft or PC manufacturer), which is the PK.
+2. Then, the hardware looks at the bootloader's Digital Certificate and checks if it was signed by the Root Certificate.
+3. Once the certificate is verified as "trusted", the hardware uses the public key inside the certificate to verify the Digital Signature of the bootloader file (Checking if it was not tampered with).
+4. The bootloader then does the exact same for the OS kernel. Then the kernel does it for drivers.
+
+```mermaid
+graph TD
+    A[Power On] --> B[Firmware Root of Trust: PK]
+    B --> C{Verify PK?}
+    
+    C -- Pass --> D[Load KEK & db/dbx Databases]
+    C -- Fail --> ERR[Security Halt: Tampered BIOS]
+    
+    D --> E{Image in dbx?}
+    E -- Yes --> ERR2[Boot Blocked: Revoked Software]
+    
+    E -- No --> F{Image/Key in db?}
+    F -- No --> G[OEM Recovery Mode]
+    
+    F -- Yes --> H[Windows Boot Manager Starts]
+    
+    H --> I{Verify Kernel via db Signature}
+    I -- Pass --> J[Load ELAM & Drivers]
+    I -- Fail --> K[Windows Recovery]
+    
+    J --> L[OS Fully Loaded]
+    
+    %% Measured Boot Parallel
+    B -.-> TPM[(TPM: Record the Chain)]
+    H -.-> TPM
+    L -.-> TPM
+```
+
 ## How to enable/disable
 To change Secure Boot status, see the tutorial in the [Secure-Boot_tutorial.md](Secure-Boot_tutorial.md) file.
 
@@ -127,4 +162,4 @@ To avoid that, user must update their UEFI firmware (BIOS) to a version without 
 - [Secure Boot Explained](https://medium.com/@sekyourityblog/secure-boot-explained-every-system-boot-is-a-negotiation-of-trust-be32fb023439)
 - [What Secure Boot Is and How Shim Files Work in Linux](https://ufo.hosting/en/blog/what-secure-boot-is-and-how-shim-files-work-in-linux)
 - [UAPI.7 Linux TPM PCR Registr](https://uapi-group.org/specifications/specs/linux_tpm_pcr_registry/)
-- [Gemini](https://gemini.google.com), used for PKfail vulnerability explanation and grammar/orthography check
+- [Gemini](https://gemini.google.com), used for PKfail vulnerability explanation and grammar/orthography check and the Mermaid.js diagram.
