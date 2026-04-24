@@ -31,6 +31,15 @@ The volume is then encrypted as a background task. The keys are only protected a
 
 It uses a low-level device driver to encrypt and decrypt all file operations.
 
+## Key hiearchy
+BitLocker contains multiple keys to encrypt a disk.
+
+- **Full Volume Encryption Key (FVEK)**: The key used to encrypt/decrypt the disk. It is stored on encrypted disk by the VMK.
+- **Volume Master Key (VMK)**: The key used to encrypt the FVEK. The VMK is protected by the TPM, PIN or Recovery Key.
+- **Recovery Key**: A 48-digit numerical password that can be used to unlock the encrypted drive if the user has changed the hardware or if there is a problem with the TPM.
+
+<img src="img/BitLocker-Disk-Decryption-Process.png" alt="BitLocker Disk Decryption Process " width="500"/>
+
 ## Vulnerabilities
 During the boot process, the TPM unseals the decryption key and sends it to the CPU in plaintext.
 
@@ -40,3 +49,4 @@ To do it, the attacker can use a Raspberry Pi Pico with a custom firmware to sni
 ## Sources
 - [BitLocker - Wikipedia](https://en.wikipedia.org/wiki/BitLocker)
 - [Breaking Bitlocker - Bypassing the Windows Disk Encryption](https://www.youtube.com/watch?v=wTl4vEednkQ)
+- [BitLocker Overview: Understanding Today’s Threats](https://www.riskinsight-wavestone.com/en/2026/02/bitlocker-overview-understanding-todays-threats/)
