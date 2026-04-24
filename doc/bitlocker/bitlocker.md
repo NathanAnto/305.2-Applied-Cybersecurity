@@ -6,7 +6,6 @@ BitLocker is a full disk encryption feature included with Microsoft Windows sinc
 By default, it uses **A**dvanced **E**ncryption **S**tandard (AES) encryption in [**C**ipher **B**lock **C**haining (CBC)](bitlocker_encryption.md#cipher-block-chaining) or [**X**or-Encrypt-Xor (XEX)-based **T**weaked codebook](bitlocker_encryption.md#xex-based-tweaked-codebook-mode-with-ciphertext-stealing) mode with [ciphertext **S**tealing](bitlocker_encryption.md#ciphertext-stealing) (XTS) mode with a 128-bit or 256-bit key. CBC is not used over the whole disk, it is applied to each individual sector.
 
 ## Availability
-
 It is available on Windows Pro, Entreprise (Windows Vista - ) and Education editions (Windows 10 and Windows 11).
 It works with Trusted Platform Module (TPM). BitLocker can validate integrity of boot and system files before decrypting a protected volume.
 
@@ -32,7 +31,12 @@ The volume is then encrypted as a background task. The keys are only protected a
 
 It uses a low-level device driver to encrypt and decrypt all file operations.
 
+## Vulnerabilities
+During the boot process, the TPM unseals the decryption key and sends it to the CPU in plaintext.
 
+This allows for an attacker with physical access to the machine to sniff the key and decrypt the disk.
+To do it, the attacker can use a Raspberry Pi Pico with a custom firmware to sniff the key directly from the motherboard.
 
 ## Sources
 - [BitLocker - Wikipedia](https://en.wikipedia.org/wiki/BitLocker)
+- [Breaking Bitlocker - Bypassing the Windows Disk Encryption](https://www.youtube.com/watch?v=wTl4vEednkQ)
