@@ -7,15 +7,15 @@ Secure boot initiates a boot sequence process that checks and verifies that only
 
 ## Diagram of key/signature and certificate exchange in Secure Boot
 
-1. The Root of Trust contins the Root Certificate pre-installed by the OEM (Microsoft or PC manufcaturer).
+1. The Root of Trust contains the Root Certificate pre-installed by the OEM (Microsoft or PC manufacturer), which is the PK.
 2. Then, the hardware looks at the bootloader's Digital Certificate and checks if it was signed by the Root Certificate.
-3. Once the certificate is verified as "trusted", the hardware uses the public key inside the ceritifcate to verify the Digital Signature of the bootloader file (Checking if it was not tampered with).
+3. Once the certificate is verified as "trusted", the hardware uses the public key inside the certificate to verify the Digital Signature of the bootloader file (Checking if it was not tampered with).
 4. The bootloader then does the exact same for the OS kernel. Then the kernel does it for drivers.
 
 ```mermaid
 graph TD
-    A[Power On] --> B[Firmware Root of Trust]
-    B --> C{Check PK integrity?}
+    A[Power On] --> B[Firmware Root of Trust: PK]
+    B --> C{Verify PK?}
     
     C -- Pass --> D[Load KEK & db/dbx Databases]
     C -- Fail --> ERR[Security Halt: Tampered BIOS]
@@ -23,16 +23,16 @@ graph TD
     D --> E{Image in dbx?}
     E -- Yes --> ERR2[Boot Blocked: Revoked Software]
     
-    E -- No --> F{Image in db?}
+    E -- No --> F{Image/Key in db?}
     F -- No --> G[OEM Recovery Mode]
     
     F -- Yes --> H[Windows Boot Manager Starts]
     
-    H --> I{Verify Kernel via CA Signature}
+    H --> I{Verify Kernel via db Signature}
     I -- Pass --> J[Load ELAM & Drivers]
     I -- Fail --> K[Windows Recovery]
     
-    J --> L[Celebrate: OS Fully Loaded]
+    J --> L[OS Fully Loaded]
     
     %% Measured Boot Parallel
     B -.-> TPM[(TPM: Record the Chain)]
