@@ -6,9 +6,13 @@ Tang performs 2 steps:
 
 **Provisioning**: When we bind the device to the Tang server using Clevis.
 
+
+<!-- ![](images/schema.png) -->
+![](images/provision_schema.png)
+
 **Recovery**: Every time the device boots.
 
-![](images/schema.png)
+![](images/recovery_schema.png)
 
 ## McCallum-Relyea
 
@@ -40,6 +44,7 @@ To perform the unlock, the client (Clevis) must store a "header" (JWE) on the di
 
 # Sources
 
+- [Chapter 14. Network-Bound Disk Encryption (NBDE)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.9/html/security_and_compliance/network-bound-disk-encryption-nbde)
 - [NBDE (Network-Bound Disk Encryption) Technology](https://access.redhat.com/articles/6987053)
 - [Tang - GitHub](https://github.com/latchset/tang)
 - [Elliptic-curve Diffie–Hellman](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman)

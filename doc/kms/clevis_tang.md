@@ -28,14 +28,18 @@ Tang was made to work with Clevis, so integration with both is simple.
 Run these commands on a Fedora system (I used a docker container for the demo)
 
 Dockerfile for Tang server image:
-```docker
+```dockerfile
 FROM fedora:latest
+
 RUN dnf install -y tang socat && dnf clean all
-RUN mkdir -p /var/db/tang
+
+# Generate keys at build time
+RUN mkdir -p /var/db/tang && /usr/libexec/tangd-keygen /var/db/tang
+
 EXPOSE 7500
+
 # Run tangd via socat since systemd-socket activation isn't standard in basic containers
-CMD /usr/libexec/tangd-keygen /var/db/tang && \
-    socat TCP-LISTEN:7500,fork,reuseaddr EXEC:"/usr/libexec/tangd /var/db/tang"
+CMD socat TCP-LISTEN:7500,fork,reuseaddr EXEC:"/usr/libexec/tangd /var/db/tang"
 ```
 
 Then build and run the server:
@@ -46,6 +50,25 @@ docker build -t tang_server -f Dockerfile.tang .
 # Run the container with a volume for keys
 docker run -d --name tang-server -p 7500:7500 -v tang-keys:/var/db/tang tang_server
 ```
+
+#### Key Rotation
+
+Implementing automated key rotation is a crucial security feature to prevent "Harvest now, decrypt later" attacks.
+
+We can rotate keys the keys in the Tang server using:
+
+```sh
+/usr/libexec/tangd-rotate-keys -d /var/db/tang
+```
+
+But once the keys are rotated, all clients must rebind to the new keys before the old ones are deleted:
+```sh
+clevis luks regen -d /dev/nvme0n1p3 -s 1
+```
+
+[clevis-luks-regen](https://manpages.ubuntu.com/manpages/resolute/man1/clevis-luks-regen.1.html)
+
+This can be done in a systemd service that is enabled on startup.
 
 #### McCallum-Relyea
 
