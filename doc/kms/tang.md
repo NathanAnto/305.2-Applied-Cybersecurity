@@ -1,6 +1,12 @@
 # Tang 
 
-Tang is software that runs on a server that let's Clevis get keys through JSON over HTTP. Tang uses a
+Tang is software that runs on a server that let's Clevis get keys through JSON over HTTP.
+
+Tang performs 2 steps:
+
+**Provisioning**: When we bind the device to the Tang server using Clevis.
+
+**Recovery**: Every time the device boots.
 
 ![](images/schema.png)
 
@@ -16,7 +22,7 @@ ECDH is used whenever you need to create a secure "tunnel" between two points qu
 
 ## Vulnerabilities
 
-### Server Spoofing
+### Lack of Authentication
 
 The McCallum-Relyea exchange is designed to be anonymous. The Tang server does not authenticate the Clevis client; it simply performs a mathematical operation on whatever the client sends.
 
@@ -24,10 +30,9 @@ The McCallum-Relyea exchange is designed to be anonymous. The Tang server does n
 
 **The Mitigation**: Security relies entirely on network segmentation. If an attacker gains physical possession of the disk and can also reach the Tang server via the network, they can unlock the data. This is why NBDE is typically used only on internal, firewalled LANs.
 
-
 ### Metadata Exposure
 
-To perform the unlock, the client (Clevis) must store a "header" (JWE) on the disk that contains the public key ($a = g^A$) and the encrypted secret.The 
+To perform the unlock, the client (Clevis) must store a "header" (JWE) on the disk that contains the public key ($a = g^A$) and the encrypted secret.
 
 **The Vulnerability**: If the server's private key is ever compromised, any attacker who has collected these JWE headers from various machines can decrypt all of them offline.
 
