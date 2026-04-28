@@ -1,7 +1,7 @@
 # 305.2 - Applied Cybersecurity
 **Full-disk encryption MVP with network unlock + TPM 2.0**
 
-Network-Bound Disk Encryption, Tang 'KMS', Clevis, LUKS2, TPM2
+Network-Bound Disk Encryption, Tang "KMS", Clevis, LUKS2, TPM2
 
 # Overview
 This project implements a full-disk encryption (FDE) MVP based on a two-factor simultaneous chain of trust.
@@ -19,6 +19,13 @@ Unlocking is only possible if both conditions are met at the same time.
 
 ## How does unlocking work?
 During boot, the initramfs executes the following sequence:
+1. Kernel loads and decompresses initramfs into memory
+2. init-top        : Starting udev, initializing userspace
+3. init-premount   : Loading kernel modules (network, TPM)
+4. local-premount  : Network initialization (DHCP/static)
+5. local-top       : Clevis reads the LUKS2 token, contacts Tang + queries TPM2,
+                     reconstructs the secret (SSS), cryptsetup open /dev/*
+6. switch_root     : Root filesystem mounted, handoff to systemd (PID 1)
 
 ## Contributors
 - [Nathan Antonietti](https://github.com/NathanAnto)
