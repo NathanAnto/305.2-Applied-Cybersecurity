@@ -2,6 +2,8 @@
 
 **Author:** Unal Külekci
 
+> **Note on paths:** Examples use my project layout (`~/secure-boot-project/` for keys, `/boot/efi/EFI/Linux/my_ubuntu.efi` for the UKI). Adjust to your own paths when following along.
+
 > This file continues from `key_generation.md` Step 8.6. For key generation see: [key_generation.md](key_generation.md)
 
 ## Step 9 — Converting Certificates to EFI Signature List (.esl)

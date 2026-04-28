@@ -1,6 +1,8 @@
-# Phase 3 — Hardening the Boot Chain with Secure Boot
+# Hardening the Boot Chain with Secure Boot
 
 **Author:** Unal Külekci
+
+> **Note on paths:** Examples use my project layout (`~/secure-boot-project/` for keys, `/boot/efi/EFI/Linux/my_ubuntu.efi` for the UKI). Adjust to your own paths when following along.
 
 ## Goal
 

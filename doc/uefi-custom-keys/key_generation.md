@@ -2,6 +2,8 @@
 
 **Author:** Unal Külekci
 
+> **Note on paths:** Examples use my project layout (`~/secure-boot-project/` for keys, `/boot/efi/EFI/Linux/my_ubuntu.efi` for the UKI). Adjust to your own paths when following along.
+
 > This is the hands-on part of taking ownership of the UEFI trust chain. It follows from [setup-and-baseline.md](setup-and-baseline.md), which covers the VM setup, Ubuntu install, Secure Boot checks, and the "before" snapshot of the current UEFI keys.
 
 ## Conversion Pipeline
