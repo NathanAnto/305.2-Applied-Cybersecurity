@@ -27,6 +27,41 @@ During boot, the initramfs executes the following sequence:
                      reconstructs the secret (SSS), cryptsetup open /dev/*
 6. switch_root     : Root filesystem mounted, handoff to systemd (PID 1)
 
+## Role of the initramfs
+The initramfs (initial RAM filesystem) is a temporary filesystem loaded into memory by the kernel before the actual root filesystem becomes available. In this project, it has been customized to include the tools needed for LUKS2 decryption.
+
+## Prerequisites
+
+### Tang Server
+- Docker
+- Port **7500** reachable from the client LAN
+
+### Client
+- Root disk already encrpted with **LUKS2**
+- Wired **network interface** available
+- **TPM 2.0** present and accessible
+- LAN access to the Tang server (port 7500)
+- Required packages: `cryptsetup`, `clevis`, `clevis-luks`, `clevis-tpm2`, `clevis-initramfs`, `tpm2-tools`
+
+
+## Installation
+
+### 1. Tang server (Docker)
+Build and start the container:
+
+```sh
+# Build the image
+docker build -t tang_server -f Dockerfile.tang .
+# Run the container (with a persistent volume for keys)
+docker run -d --name tang-server \
+  -p 7500:7500 \
+  -v tang-keys:/var/db/tang \
+  tang_server
+```
+> Keys are generated automatically on first startup and persisted in the `tang-keys` volume.
+
+### 2. Ubuntu client
+
 ## Contributors
 - [Nathan Antonietti](https://github.com/NathanAnto)
 - [Vincent Cordola](https://github.com/VinceCor)
