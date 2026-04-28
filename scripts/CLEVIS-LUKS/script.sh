@@ -3,10 +3,15 @@ set -e
 
 TARGET_DEV="/dev/nvme0n1p3"
 TANG_URL="http://192.168.10.6:7500"
-IFACE="enx607d09062838"
+IFACE=$(ip link show | grep "^[0-9]: en" | head -1 | awk '{print $2}' | sed 's/:$//')
 IP_ADDR="192.168.10.2"
 NETMASK="255.255.255.0"
 GATEWAY="192.168.10.1"
+
+if [ -z "${IFACE// }" ]; then
+    echo "No network interface found. Exiting."
+    exit 1
+fi
 
 apt-get update && apt-get install -y cryptsetup clevis clevis-luks clevis-tpm2 clevis-initramfs tpm2-tools
 
