@@ -1,6 +1,8 @@
-# Phase 3 — Key Generation and UEFI Enrollment
+# Key Generation
 
-> This is the hands-on part of Phase 3. It follows from [setup-and-baseline.md](setup-and-baseline.md), which covers the VM setup, Ubuntu install, Secure Boot checks, and the "before" snapshot of the current UEFI keys.
+**Author:** Unal Külekci
+
+> This is the hands-on part of taking ownership of the UEFI trust chain. It follows from [setup-and-baseline.md](setup-and-baseline.md), which covers the VM setup, Ubuntu install, Secure Boot checks, and the "before" snapshot of the current UEFI keys.
 
 ## Conversion Pipeline
 
@@ -22,6 +24,8 @@ A key starts as a private key file and ends up as a UEFI variable. Each format h
 | `.esl` (EFI Signature List) | UEFI's own key format. It wraps the X.509 in an envelope: owner GUID + type info + certificate. | UEFI can store many keys in one file and mix types (X.509, SHA-256 hash). |
 | `.auth` (Authenticated) | An ESL plus a digital signature. | UEFI does not accept unsigned variable updates, except in Setup Mode. |
 
+> **Script:** [`scripts/generate_keys.sh`](scripts/generate_keys.sh) automates Steps 8.1–8.5.
+
 ## Step 8.1 — GUID Generation
 
 ```bash
@@ -30,7 +34,7 @@ cd ~/secure-boot-project/keys
 uuidgen > GUID.txt
 ```
 
-![GUID generation](img/key_enrollment/guid.png)
+![GUID generation](img/key_generation/guid.png)
 
 UEFI tags every key owner with a GUID. Later, when I turn my certificates into `.esl` format, each entry needs an owner GUID. All my keys (PK, KEK, db) share the same GUID because they all belong to me.
 
@@ -52,11 +56,13 @@ Private Key (.key) → CSR (.csr) → Certificate (.crt)
 openssl genrsa -out PK.key 2048
 ```
 
-I create a 2048-bit RSA private key first because everything else depends on it: the public key inside the CSR comes from it, the CSR is signed by it, and the certificate is signed by it. This key must never leave my machine.
+I create a 2048-bit RSA private key first because everything else depends on it: the public key inside the CSR comes from it, the CSR is signed by it, and the certificate is signed by it. This key must stay under my control and never be exposed to an untrusted system.
+
+> **MVP note:** For this project, all private keys live on a removable USB drive — `~/secure-boot-project/keys/` is the USB mount point. See [Step 8.5](#step-85--private-key-security) for details.
 
 Reference: [openssl-genrsa manual](https://docs.openssl.org/master/man1/openssl-genrsa/)
 
-![PK private key generation](img/key_enrollment/my_pk.png)
+![PK private key generation](img/key_generation/my_pk.png)
 
 ### 8.2.2 CSR (Certificate Signing Request)
 
@@ -68,11 +74,11 @@ A CSR is a "please sign a certificate with this identity" request. Normally I wo
 
 After running the command, I list the files with `ls` and read the Base64-encoded CSR with `cat PK.csr`:
 
-![CSR generation and content](img/key_enrollment/csr.png)
+![CSR generation and content](img/key_generation/csr.png)
 
 **What is inside a CSR?** I can read it in plain form with `openssl req -in PK.csr -text -noout`:
 
-![CSR detail — Subject and Public Key](img/key_enrollment/csr_detail.png)
+![CSR detail — Subject and Public Key](img/key_generation/csr_detail.png)
 
 | Field | Description |
 |---|---|
@@ -92,7 +98,7 @@ CSR content (CN + public key)  →  SHA-256  →  hash  →  encrypt with privat
 
 The screenshot below shows the `sha256WithRSAEncryption` algorithm and the Signature Value it produced:
 
-![CSR Signature Algorithm and Signature Value](img/key_enrollment/csr_signature_detail.png)
+![CSR Signature Algorithm and Signature Value](img/key_generation/csr_signature_detail.png)
 
 **Why does the CSR come before the certificate?** Certificate = CSR + signature. The fields written into the certificate (CN, public key) come from the CSR. I cannot build a certificate without a CSR — the CSR is the raw material.
 
@@ -112,7 +118,7 @@ My certificate is in **X.509** format — the standard format for public-key cer
 openssl x509 -in PK.crt -text -noout | head -15
 ```
 
-![PK certificate details](img/key_enrollment/crt_detail.png)
+![PK certificate details](img/key_generation/crt_detail.png)
 
 **What did the certificate gain on top of the CSR?**
 
@@ -148,13 +154,13 @@ openssl req -new -key KEK.key -out KEK.csr -subj "/CN=Unal Key Exchange Key"
 openssl x509 -req -in KEK.csr -CA PK.crt -CAkey PK.key -CAcreateserial -out KEK.crt -days 3650 -sha256
 ```
 
-![KEK key generation](img/key_enrollment/kek_generate.png)
+![KEK key generation](img/key_generation/kek_generate.png)
 
 Compared with PK signing:
 
 | | PK (self-signed) | KEK (signed by PK) |
 |---|---|---|
-| Command difference | `-signkey PK.key` | `-CA PK.crt -CAkey PK.key` |
+| Command difference | `-key PK.key -in PK.csr` | `-CA PK.crt -CAkey PK.key` |
 | Meaning | Sign with my own private key | Use PK as the Certificate Authority |
 | Extra | — | `-CAcreateserial` creates a serial-number file (`PK.srl`) |
 
@@ -166,7 +172,7 @@ Verification:
 openssl x509 -in KEK.crt -text -noout | head -15
 ```
 
-![KEK certificate details](img/key_enrollment/kek_crt_detail.png)
+![KEK certificate details](img/key_generation/kek_crt_detail.png)
 
 Unlike PK, Issuer and Subject are now **different**:
 
@@ -196,13 +202,13 @@ openssl req -new -key db.key -out db.csr -subj "/CN=Unal Signature Database"
 openssl x509 -req -in db.csr -CA KEK.crt -CAkey KEK.key -CAcreateserial -out db.crt -days 3650 -sha256
 ```
 
-![db private key generation](img/key_enrollment/db_key_generation.png)
+![db private key generation](img/key_generation/db_key_generation.png)
 
 > **Note on `openssl genrsa`:** This command creates an RSA private key. The `.key` file actually holds **both** the private and the public parts: modulus (N), public exponent (e = 65537), private exponent (d), and the prime factors (p, q). The public key is just a subset of this data: (N, e). When I create a CSR later, OpenSSL pulls the public key out of this file automatically — I do not need a separate export step.
 
 > **Security note:** Running `openssl rsa -in db.key -text -noout` prints the full RSA math, including the secret private exponent and the prime factors. This is fine for learning, but I must never share that output. To see only the public part: `openssl rsa -in db.key -pubout`.
 
-![db public key export](img/key_enrollment/db_key_pubout.png)
+![db public key export](img/key_generation/db_key_pubout.png)
 
 The difference from KEK: the signing authority moves one level down.
 
@@ -217,13 +223,13 @@ Verification:
 openssl x509 -in db.crt -text -noout | grep -E "Issuer:|Subject:"
 ```
 
-![db issuer and subject verification](img/key_enrollment/db_issuer_subject.png)
+![db issuer and subject verification](img/key_generation/db_issuer_subject.png)
 
 Issuer = KEK, Subject = db — the hierarchy is fully in place.
 
 Expected files at this point:
 
-![Serial number files](img/key_enrollment/srl_files.png)
+![Serial number files](img/key_generation/srl_files.png)
 
 `PK.srl` was created when PK signed KEK. `KEK.srl` was created when KEK signed db. Each `.srl` file keeps track of serial numbers for the certificates issued by that CA.
 
@@ -233,7 +239,7 @@ The full trust chain is now built:
 PK (self-signed)
  └── signed → KEK
                 └── signed → db
-                               └── will sign → grubx64.efi, vmlinuz
+                               └── will sign → grubx64.efi, vmlinuz, my_ubuntu.efi (UKI)
 ```
 
 ### Why I do NOT create dbx
@@ -248,17 +254,9 @@ The tooling to update dbx is in place (my KEK can sign dbx updates), but I do no
 
 ## Step 8.5 — Private Key Security
 
-Right now all private keys sit in `~/secure-boot-project/keys/` as plain-text files. This is OK for a prototype but it is a real security weakness:
+**MVP approach (final):** I keep all private keys on a removable USB drive — `~/secure-boot-project/keys/` is the USB mount point. Plugged in only when signing or enrolling, unplugged otherwise. Keys never sit on the host disk.
 
-| Environment | PK key | KEK key | db key |
-|---|---|---|---|
-| **Enterprise** | Air-gapped HSM, accessed once a year | Physical HSM, accessed monthly | KMS/TPM, automated daily access |
-| **Small company** | USB hardware token (YubiKey) | USB hardware token | CI/CD encrypted vault |
-| **This project** | Same disk, plain text | Same disk, plain text | Same disk, plain text |
-
-**Known risk:** If an attacker gets root, they can read `db.key`, sign a malicious kernel, and Secure Boot will accept it — because the signature is valid. We plan to fix this weakness in Phase 4 (KMS).
-
-For now, I tighten file permissions:
+**During in-VM testing** the keys lived on the VM disk. For that setup I tightened permissions:
 
 ```bash
 chmod 700 ~/secure-boot-project/keys
@@ -266,9 +264,16 @@ chmod 600 ~/secure-boot-project/keys/*.key
 ```
 
 - `700` on the folder: only my user can enter it.
-- `600` on the `.key` files: only my user can read them.
+- `600` on `.key` files: only my user can read them.
 
-This does not stop a root-level attack, but it stops other users on the system from reading the keys.
+This stops other users on the system, but not a root-level attack. That gap is closed by the USB approach (this project) and later by Phase 4 (KMS).
+
+| Environment | PK key | KEK key | db key |
+|---|---|---|---|
+| **Enterprise** | Air-gapped HSM | Physical HSM | KMS/TPM |
+| **Small company** | USB hardware token (YubiKey) | USB hardware token | CI/CD encrypted vault |
+| **This project (in-VM testing)** | VM disk + `chmod 600` | same | same |
+| **This project (MVP)** | USB drive, mounted only when signing | same | same |
 
 ## Step 8.6 — Trust Chain Verification
 
@@ -284,7 +289,7 @@ The script runs two checks:
 
 For each certificate, the script prints the Subject and Issuer so I can confirm the logical chain:
 
-![Subject/Issuer hierarchy](img/key_enrollment/verify_si_hierarchy.png)
+![Subject/Issuer hierarchy](img/key_generation/verify_si_hierarchy.png)
 
 - **PK:** Subject = Issuer (`CN=Unal Platform Key`) → self-signed
 - **KEK:** Subject = `CN=Unal Key Exchange Key`, Issuer = `CN=Unal Platform Key` → signed by PK
