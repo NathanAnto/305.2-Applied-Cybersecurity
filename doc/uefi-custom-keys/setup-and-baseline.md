@@ -1,5 +1,7 @@
 # Phase 3 — Hardening the Boot Chain with Secure Boot
 
+**Author:** Unal Külekci
+
 ## Goal
 
 Secure Boot is a UEFI security standard that creates a "Chain of Trust" starting at the hardware level. The firmware checks the digital signature of each boot component. If a signature is missing or invalid, the system refuses to boot.
@@ -12,12 +14,14 @@ Terms:
 - **Enrollment** = The act of loading these keys into UEFI. Putting them in UEFI's vault.
 - **Custom key enrollment** = Loading our own keys into UEFI.
 
-**Scope:** No LUKS, no TPM. Only Ubuntu installation + Secure Boot custom key enrollment.
+**Scope:** No LUKS, no TPM. Ubuntu install, Secure Boot custom key enrollment, UKI creation signed by the same db key, and UEFI BootOrder change to boot the UKI first.
 
 **Document layout:**
 
 - **This file** (`setup-and-baseline.md`) — VM setup, Ubuntu install, Secure Boot checks, and the "before" snapshot of the current UEFI keys.
-- **Next → [key_enrollment.md](key_enrollment.md)** — the hands-on part: GUID generation, PK/KEK/db key and certificate creation, signing GRUB/kernel, enrolling the keys into UEFI, and final verification.
+- **[key_generation.md](key_generation.md)** — GUID generation, PK/KEK/db key and certificate creation, trust chain verification.
+- **[efi_conversion.md](efi_conversion.md)** — convert certs to UEFI ESL/auth format, sign GRUB and kernel, enroll keys into UEFI, reboot validation.
+- **[uki.md](uki.md)** — close the initrd gap with a Unified Kernel Image, signed by the same db key.
 
 ## Environment
 
@@ -87,7 +91,7 @@ After the VM settings are done, I click **Start** and run a normal Ubuntu instal
 - **Partitions:**
   - `sda1` → FAT32, mounted at `/boot/efi` → EFI System Partition (ESP). The bootloader lives here.
   - `sda2` → ext4, mounted at `/` → main Linux filesystem.
-- **Important:** Later I will sign files like `grubx64.efi` and `shimx64.efi` that live inside the ESP. My working folder will be `/boot/efi/EFI/ubuntu/`.
+- **Important:** Later I will sign `grubx64.efi` and the kernel with `db.key`, then build a signed UKI (`my_ubuntu.efi`) that UEFI boots directly. `shimx64.efi` is skipped; signed GRUB stays as a fallback. Working folder: `/boot/efi/EFI/ubuntu/`.
 
 ## Step 5 — Verifying Secure Boot is Active
 
@@ -259,7 +263,7 @@ ls -la /boot/efi/EFI/ubuntu/
 - `grubx64.efi` — the GRUB bootloader. Shim verifies it.
 - `mmx64.efi` — MOK Manager (a tool for Machine Owner Keys).
 - `grub.cfg` — GRUB's configuration.
-- **After the project:** `shimx64.efi` and `mmx64.efi` are no longer needed. A `grubx64.efi` signed with my own key will be run directly by UEFI.
+- **After the project:** `shimx64.efi` and `mmx64.efi` are no longer needed. UEFI runs my signed UKI (`my_ubuntu.efi`) directly; signed `grubx64.efi` remains as a fallback.
 
 ### 7.3 Kernel and Initramfs
 
@@ -271,9 +275,9 @@ ls -la /boot/
 
 - `vmlinuz-6.17.0-22-generic` — the Linux kernel. I will sign this file in the project.
 - `vmlinuz` → a symlink to the current kernel. GRUB and most tools use this short name.
-- `initrd.img-6.17.0-22-generic` — the initial ramdisk (initramfs). It holds the early drivers and init scripts the kernel needs at the first boot stage. It stays **unsigned** (a known weakness of this setup).
+- `initrd.img-6.17.0-22-generic` — the initial ramdisk (initramfs). It holds the early drivers and init scripts the kernel needs at the first boot stage. It stays **unsigned** here; the UKI step ([uki.md](uki.md)) closes this gap by bundling it inside a signed `.efi`.
 - `initrd.img` → a symlink to the current initramfs.
-- `*.old` files — backups of the previous kernel/initrd, kept in case an update breaks the boot.
+- `*.old` files — backups of the previous kernel/initrd, kept in case an update breaks the boot. **Security note:** older kernels still carry their original CVEs (Common Vulnerabilities and Exposures — the public catalog of known security flaws), so a boot-menu downgrade attack remains possible even after key enrollment. Mitigation (out of scope): `apt autoremove --purge` to delete, or `dbx` to revoke specific hashes.
 - Other files I see: `config-*` (the kernel build config), `System.map-*` (kernel symbol table, used for debugging), `memtest86+*` (a memory-testing tool), and the `efi/` and `grub/` directories.
 
 ### 7.4 Verifying the Current Signatures
@@ -305,8 +309,9 @@ sudo sbverify --list /boot/vmlinuz-6.17.0-22-generic
 
 ## References
 
-- [Wikipedia — UEFI (Secure Boot)](https://en.wikipedia.org/wiki/UEFI#:~:text=When%20Secure%20Boot%20is%20enabled,be%20loaded%20by%20the%20firmware.)
-- [Arch Wiki — UEFI Secure Boot](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot)
-- [Wikipedia — UEFI Secure Boot (section)](https://en.wikipedia.org/wiki/UEFI#Secure_Boot_2)
-- [Rod Smith — EFI Bootloaders and Secure Boot](https://www.rodsbooks.com/efi-bootloaders/secureboot.html)
-- [Claude AI (Anthropic)](https://claude.ai) — used as an interactive assistant for explanations, troubleshooting, and structuring this document
+- [UEFI Specification 2.10 — Secure Boot and Driver Signing](https://uefi.org/specs/UEFI/2.10/32_Secure_Boot_and_Driver_Signing.html) — authoritative spec for PK/KEK/db, ESL, and `.auth` formats.
+- [Wikipedia — UEFI](https://en.wikipedia.org/wiki/UEFI) — overview of UEFI and Secure Boot.
+- [Arch Wiki — UEFI Secure Boot](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot) — practical guide with custom key examples.
+- [Rod Smith — EFI Bootloaders and Secure Boot](https://www.rodsbooks.com/efi-bootloaders/secureboot.html) — historical and technical context.
+- [VirtualBox User Manual](https://www.virtualbox.org/manual/) — VM configuration including UEFI/Secure Boot/TPM options used in Steps 1–4.
+- [Claude AI (Anthropic)](https://claude.ai) — used as an interactive assistant for explanations, troubleshooting, and structuring this document.
