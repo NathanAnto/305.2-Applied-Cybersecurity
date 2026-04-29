@@ -27,25 +27,12 @@ Tang was made to work with Clevis, so integration with both is simple.
 
 Run these commands on a Fedora system (I used a docker container for the demo)
 
-Dockerfile for Tang server image:
-```dockerfile
-FROM fedora:latest
-
-RUN dnf install -y tang socat && dnf clean all
-
-# Generate keys at build time
-RUN mkdir -p /var/db/tang && /usr/libexec/tangd-keygen /var/db/tang
-
-EXPOSE 7500
-
-# Run tangd via socat since systemd-socket activation isn't standard in basic containers
-CMD socat TCP-LISTEN:7500,fork,reuseaddr EXEC:"/usr/libexec/tangd /var/db/tang"
-```
+Dockerfile for Tang server image: [](../../mvp/docker/Dockerfile)
 
 Then build and run the server:
 ```sh
 # Build the image
-docker build -t tang_server -f Dockerfile.tang .
+docker build -t tang_server -f ./mvp/docker/Dockerfile ./mvp/docker/
 
 # Run the container with a volume for keys
 docker run -d --name tang-server -p 7500:7500 -v tang-keys:/var/db/tang tang_server
@@ -53,9 +40,9 @@ docker run -d --name tang-server -p 7500:7500 -v tang-keys:/var/db/tang tang_ser
 
 #### Key Rotation
 
-Implementing automated key rotation is a crucial security feature to prevent "Harvest now, decrypt later" attacks.
+Implementing automated key rotation is a crucial security feature. It ensures that if an attacker is using "brute force" methods on a specific key, the key expires before they can successfully crack it.
 
-We can rotate keys the keys in the Tang server using:
+We can rotate the keys in the Tang server using:
 
 ```sh
 /usr/libexec/tangd-rotate-keys -d /var/db/tang

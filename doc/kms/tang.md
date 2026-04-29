@@ -1,13 +1,11 @@
 # Tang 
 
-Tang is software that runs on a server that let's Clevis get keys through JSON over HTTP.
+Tang is software that runs on a server that lets Clevis get keys through JSON over HTTP.
 
 Tang performs 2 steps:
 
 **Provisioning**: When we bind the device to the Tang server using Clevis.
 
-
-<!-- ![](images/schema.png) -->
 ![](images/provision_schema.png)
 
 **Recovery**: Every time the device boots.
