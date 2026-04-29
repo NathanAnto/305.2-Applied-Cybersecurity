@@ -1,6 +1,6 @@
 # Clevis and Tang as a Key Management System (KMS)
 
-For our specific project, a good solution would be to use **Clevis** for automated encryption and a **Tang** server for decryption in LAN. This method is called Network-Bound Disk Encryption (NBDE).
+Strictly speaking, Tang isn't a KMS because it doesn't store anything, it is stateless. But for our specific project, it's a good solution to use **Clevis** for automated encryption and a **Tang** server for decryption in LAN. This method is called Network-Bound Disk Encryption (NBDE).
 
 1. Initramfs loads: Ubuntu starts the network stack and the TPM driver.
 2. Clevis initiates [SSS](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing): It sees the LUKS2 JSON token and realizes it needs two shares to unlock the drive.
@@ -12,8 +12,7 @@ For our specific project, a good solution would be to use **Clevis** for automat
 
 ## What is Clevis
 
-Clevis is an encryption automation tool that uses luks encryption 
-
+Clevis is an encryption automation tool that uses luks encryption.
 
 ## What is Tang
 
