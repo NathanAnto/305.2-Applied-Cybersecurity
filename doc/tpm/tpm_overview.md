@@ -1,3 +1,9 @@
+# TPM Overview
+
+**Author:** Unal Külekci
+
+> **See also:** [tpm_doc.md](tpm_doc.md) — companion reference for the TPM key hierarchy (seeds, SRK, KDF/templates) and the full PCR register table.
+
 ## What is TPM?
 
 A **Trusted Platform Module (TPM)** is a secure cryptoprocessor that implements the [ISO/IEC 11889](https://www.iso.org/standard/66510.html) standard — a dedicated microprocessor designed to secure hardware by integrating cryptographic keys into devices. The chip includes multiple physical security mechanisms to make it tamper-resistant, and malicious software is unable to tamper with its security functions. In practice a TPM can be used for various security applications such as:
@@ -56,7 +62,7 @@ The five features listed above are independent of each other. The TPM does not n
 
 *VirtualBox settings for our Ubuntu VM: TPM Version is set to 2.0, UEFI is enabled, and Secure Boot is checked. All three must be active before installing Ubuntu with LUKS full disk encryption.*
 
-> **Note:** LUKS (Linux Unified Key Setup) is not the same thing as disk encryption — it is one implementation of it, specific to Linux. Other implementations include BitLocker (Windows), FileVault (macOS), and VeraCrypt (cross-platform). We focus on LUKS here because our project runs on Linux.
+> **Note:** LUKS (Linux Unified Key Setup) is not the same thing as disk encryption — it is one implementation of it, specific to Linux. Other implementations include BitLocker (Windows), FileVault (macOS), and VeraCrypt (cross-platform). We focus on LUKS here because this guide targets Linux.
 
 ```
 ┌──────────┐       ┌──────────────┐       ┌────────────────┐       ┌──────────┐
@@ -99,7 +105,7 @@ Each stage hashes the next before passing control. Secure Boot additionally **ve
 
 > **Sealing** means giving data to the TPM and saying "store this, only give it back when the PCR values match what they are right now." The TPM locks (seals) the data; later it unlocks (unseals) it — but only if the system state has not changed. **Enrollment** is the one-time process of sealing a key into the TPM and registering it in the LUKS header, so that the two can work together from that point on.
 
-The project description defines two distinct states for a TPM-backed encrypted system:
+TPM-backed disk encryption has two distinct lifecycle states:
 
 **1. Provisioning (enrollment)**
 
@@ -124,14 +130,7 @@ At boot, systemd reads the token from the LUKS header, asks the TPM to unseal th
 
 **3. After unseal: the key is in RAM**
 
-Once the TPM releases the key and it is handed to dm-crypt, it sits in RAM like any other data — the TPM's protection ends at that point. This means TPM sealing protects against **offline disk theft** (the disk cannot be opened on a different machine) but does **not** protect against a memory dump attack on the running system. The `aeskeyfind` attack described in the "Breaking FDE" phase of this project works exactly the same way on a TPM-unlocked system — because the key is still in RAM.
-
-
-## Our Setup
-
-- VirtualBox + Ubuntu 24.04
-- swtpm (Software TPM 2.0)
-- LUKS2 + AES-XTS-512
+Once the TPM releases the key and it is handed to dm-crypt, it sits in RAM like any other data — the TPM's protection ends at that point. This means TPM sealing protects against **offline disk theft** (the disk cannot be opened on a different machine) but does **not** protect against a memory dump attack on the running system. The `aeskeyfind` attack on a running LUKS system works exactly the same way on a TPM-unlocked system — because the key is still in RAM.
 
 
 ## Glossary
