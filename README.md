@@ -28,7 +28,7 @@ Both shares are combined via **Shamir's Secret Sharing** (Clevis SSS pin) to rec
 
 - [How it works](doc/HOW_IT_WORKS.md) boot sequence, initramfs role, cryptographic protocol
 - [Installation](doc/INSTALLATION.md) Tang server setup, client configuration, binding steps
-- [Limitations](doc/LIMITATIONS.md) residual attack vectors and improvement paths
+- [Limitations](doc/LIMITATIONS_IMPROVEMENTS.md) residual attack vectors and improvement paths
 
 ## Authors
 
