@@ -1,0 +1,16 @@
+[Unit]
+Description=Refresh NBDE Clevis Bindings
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Systemd loads the file here
+ExecStart=/usr/local/bin/nbde-rebind-check.sh
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
