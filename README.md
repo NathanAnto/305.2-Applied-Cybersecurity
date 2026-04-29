@@ -1,92 +1,41 @@
-# 305.2 - Applied Cybersecurity
-**Full-disk encryption MVP with network unlock + TPM 2.0**
+# Full-Disk Encryption MVP — Network Unlock + TPM 2.0
 
-Network-Bound Disk Encryption, Tang "KMS", Clevis, LUKS2, TPM2
+**Course**: 305.2 - Applied Cybersecurity
 
-# Overview
-This project implements a full-disk encryption (FDE) MVP based on a two-factor simultaneous chain of trust.
+## Description
+
+This project implements a **full-disk encryption (FDE)** MVP based on a two-factor simultaneous chain of trust.
+The root disk of an Ubuntu client is encrypted with **LUKS2** and unlocks automatically at boot only if two conditions are met at the same time:
+
+- **TPM 2.0** validates the integrity of the boot chain (BIOS, kernel, initramfs)
+- **Tang server** (acting as a network KMS) is reachable and responds correctly
+
+Both shares are combined via **Shamir's Secret Sharing** (Clevis SSS pin) to reconstruct the LUKS2 passphrase. If either factor is missing or tampered with, the disk stays locked.
+
+> The McCallum-Relyea protocol (ECDH variant) ensures the client never reveals its secret to the Tang server.
+
+## Stack
 
 | Component | Role |
 |-----------|------|
-| **Tang server** (Fedora / Docker) | Key Management Server, responds to customers' ECDH inquiries |
-| **Ubuntu client** | Root disk encrypted with **LUKS2**, automatic unlocking at startup |
-| **Clevis + pin SSS** | Orchestrates the secret shared between Tang and TPM2 using Shamir's Secret Sharing |
-| **TPM2** | Checks the integrity of the boot chain |
-| **Custom initramfs** | Include the network scripts and Clevis required for unlocking before mounting the root partition |
+| **Tang** (Fedora / Docker) | Network Key Management Server |
+| **Clevis + pin SSS** | Secret reconstruction via Shamir's Secret Sharing |
+| **TPM 2.0** | Boot chain integrity measurement |
+| **LUKS2** | Root disk encryption |
+| **Custom initramfs** | Early-boot network + unlock toolchain |
 
-Unlocking is only possible if both conditions are met at the same time.
-> The McCallum-Relyea protocol (ECDH variant) ensures that the client never reveals its secret to the Tang server 
+## Documentation
 
-## How does unlocking work?
-During boot, the initramfs executes the following sequence:
-1. Kernel loads and decompresses initramfs into memory
-2. init-top        : Starting udev, initializing userspace
-3. init-premount   : Loading kernel modules (network, TPM)
-4. local-premount  : Network initialization (DHCP/static)
-5. local-top       : Clevis reads the LUKS2 token, contacts Tang + queries TPM2,
-                     reconstructs the secret (SSS), cryptsetup open /dev/*
-6. switch_root     : Root filesystem mounted, handoff to systemd (PID 1)
+- [How it works](doc/HOW_IT_WORKS.md) — boot sequence, initramfs role, cryptographic protocol
+- [Installation](doc/INSTALLATION.md) — Tang server setup, client configuration, binding steps
+- [Limitations](doc/LIMITATIONS.md) — residual attack vectors and improvement paths
 
-## Role of the initramfs
-The initramfs (initial RAM filesystem) is a temporary filesystem loaded into memory by the kernel before the actual root filesystem becomes available. In this project, it has been customized to include the tools needed for LUKS2 decryption.
+## Authors
 
-## Prerequisites
-
-### Tang Server
-- Docker
-- Port **7500** reachable from the client LAN
-
-### Client
-- Root disk already encrpted with **LUKS2**
-- Wired **network interface** available
-- **TPM 2.0** present and accessible
-- LAN access to the Tang server (port 7500)
-- Required packages: `cryptsetup`, `clevis`, `clevis-luks`, `clevis-tpm2`, `clevis-initramfs`, `tpm2-tools`
-
-
-## Installation
-
-### 1. Tang server (Docker)
-Build and start the container:
-
-```sh
-# Build the image
-docker build -t tang_server -f Dockerfile.tang .
-# Run the container (with a persistent volume for keys)
-docker run -d --name tang-server \
-  -p 7500:7500 \
-  -v tang-keys:/var/db/tang \
-  tang_server
-```
-> Keys are generated automatically on first startup and persisted in the `tang-keys` volume.
-
-### 2. Ubuntu client
-
-#### 2.1 Adapt the configuration script
-Before running the script, open `script.sh` and update the following variables to match your environment:
-```bash
-TARGET_DEV="/dev/nvme0n1p3"         # LUKS2 partition to unlock
-TANG_URL="http://192.168.10.6:7500"  # Tang server IP and port
-IP_ADDR="192.168.10.2"              # Client static IP used in initramfs
-NETMASK="255.255.255.0"
-GATEWAY="192.168.10.1"
-```
-
-#### 2.2 Run the installation script
-```sh
-sudo bash script.sh
-```
-The script performs the following steps:
-1. Installs the required packages
-2. Installs the network hook into initramfs (`/etc/initramfs-tools/hooks/clevis-network`)
-3. Configures a static IP for the initramfs phase (`/etc/initramfs-tools/conf.d/static_ip`)
-4. Prompts to perform the Clevis binding (TPM2 + Tang via SSS)
-5. Regenerates the initramfs (`update-initramfs -u -k all`)
-
-
-## Contributors
-- [Nathan Antonietti](https://github.com/NathanAnto)
-- [Vincent Cordola](https://github.com/VinceCor)
-- [Ünal Külekçi](https://github.com/UnalKulekci)
-- [Filip Siliwoniuk](https://github.com/fylis)
-- [Kevin Voisin](https://github.com/kevivois)
+| Name | GitHub |
+|------|--------|
+| Nathan Antonietti | [@NathanAnto](https://github.com/NathanAnto) |
+| Vincent Cordola | [@VinceCor](https://github.com/VinceCor) |
+| Ünal Külekçi | [@UnalKulekci](https://github.com/UnalKulekci) |
+| Filip Siliwoniuk | [@fylis](https://github.com/fylis) |
+| Kevin Voisin | [@kevivois](https://github.com/kevivois) |
