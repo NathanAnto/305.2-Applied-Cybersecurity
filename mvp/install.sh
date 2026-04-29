@@ -3,10 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source "$SCRIPT_DIR/config.env"
-source "$SCRIPT_DIR/lib/log.sh"
-source "$SCRIPT_DIR/lib/checks.sh"
-source "$SCRIPT_DIR/lib/utils.sh"
+source "./config.env"
+source "./lib/log.sh"
 
 # Find device that is in LUKS Format
 TARGET_DEV="/dev/$(lsblk -lo NAME,FSTYPE | awk '$2 == "crypto_LUKS" {print $1}')"
@@ -31,15 +29,8 @@ IP_ADDR=$(ip -4 addr show $IFACE | awk '/inet / {print $2}' | cut -d/ -f1)
 # -----------------------------------------------------------------------------
 apt-get update && apt-get install -y cryptsetup clevis clevis-luks clevis-tpm2 clevis-initramfs tpm2-tools ssss
 
-# -----------------------------------------------------------------------------
-# Feature scripts
-# -----------------------------------------------------------------------------
-
-# log_info "Configuring Secure Boot…"
-# bash "$SCRIPT_DIR/scripts/secureboot.sh"
- 
-log_info "Configuring initramfs…"
-bash "$SCRIPT_DIR/scripts/initramfs.sh" "$IP_ADDR" "$IFACE"
+cp ./clevis-network.sh /etc/initramfs-tools/hooks/clevis-network
+chmod +x /etc/initramfs-tools/hooks/clevis-network
  
 log_info "Installing NBDE rebind service…"
  
@@ -52,7 +43,7 @@ log_info "Runtime env written to $NBDE_ENV_FILE"
 # Install unit file and the rebind script to their final locations
 install -Dm 644 "$SCRIPT_DIR/units/nbde-rebind.service" \
     "${UNIT_INSTALL_DIR}/nbde-rebind.service"
-install -Dm 755 "$SCRIPT_DIR/scripts/nbde-rebind-check.sh" \
+install -Dm 744 "$SCRIPT_DIR/scripts/nbde-rebind-check.sh" \
     "${SCRIPTS_INSTALL_DIR}/nbde-rebind-check.sh"
 log_info "Unit and script installed."
 
@@ -65,7 +56,9 @@ echo "IP=${IP_ADDR}::${GATEWAY}:${NETMASK}::${IFACE}:off" > /etc/initramfs-tools
 # -----------------------------------------------------------------------------
 # Clevis LUKS binding
 # -----------------------------------------------------------------------------
-if [ "$clevis_binding" = "Y" ]; then
+read -p "clevis binding [y,N]" clevis_binding
+
+if [ "$clevis_binding" = "y" ]; then
     SSS_CONFIG=$(printf \
         '{"t": 2, "pins": {"tpm2": {"pcr_ids": "7"}, "tang": [{"url": "%s"}]}}' \
         "$TANG_SERVER_URL"
