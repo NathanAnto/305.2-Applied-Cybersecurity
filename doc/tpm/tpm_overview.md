@@ -18,12 +18,6 @@ The host cannot access the TPM's internal memory directly. We interact with the 
 sudo apt install tpm2-tools
 ```
 
-TODO :: what is the advantages of trusted platform module
-    - https://www.intel.com/content/www/us/en/learn/what-is-a-trusted-platform-module.html#:~:text=Trusted%20Platform%20Module%20(TPM)%20technology%20helps%20keep%20PCs%20secure%20by,information%20users%20want%20securely%20stored.
-
-    - https://www.beyondidentity.com/resource/what-is-the-tpm-trusted-platform-module-and-why-is-it-important#:~:text=The%20benefit%20is%20that%20the,even%20in%20the%20event%20of:
-
-
 ## Core Concepts
 
 ### Hardware Root of Trust (HRoT)
@@ -133,30 +127,11 @@ At boot, systemd reads the token from the LUKS header, asks the TPM to unseal th
 Once the TPM releases the key and it is handed to dm-crypt, it sits in RAM like any other data — the TPM's protection ends at that point. This means TPM sealing protects against **offline disk theft** (the disk cannot be opened on a different machine) but does **not** protect against a memory dump attack on the running system. The `aeskeyfind` attack described in the "Breaking FDE" phase of this project works exactly the same way on a TPM-unlocked system — because the key is still in RAM.
 
 
-## How TPM Works in Practice
+## Our Setup
 
-- https://tpm2-software.github.io/
-- https://tpm2-software.github.io/2020/04/13/Disk-Encryption.html
-- https://wiki.archlinux.org/title/Trusted_Platform_Module
-- https://tpm2-tools.readthedocs.io/en/latest/
-
-
-### Our Setup
 - VirtualBox + Ubuntu 24.04
 - swtpm (Software TPM 2.0)
 - LUKS2 + AES-XTS-512
-
-### Exploring the TPM
-
-> **TODO:** Run each command on the VM, capture outputs, and document with explanations.
-
-### PCR Register Table
-
-> **TODO:** Build from `tpm2_pcrread sha256` output — which PCR measures what.
-
-### Event Log
-
-> **TODO:** Build from `tpm2_eventlog` output — the real measurement chain from boot.
 
 
 ## Glossary
@@ -175,8 +150,6 @@ Once the TPM releases the key and it is handed to dm-crypt, it sits in RAM like 
 
 ## Summary: What TPM Does and Does Not Do
 
-> **TODO:** This section is a draft and will be revised after the TPM workflow is fully explained.
-
 The TPM is not a firewall — it does not block anything. It works more like a **notary**: it records what happened, but does not stop it from happening.
 
 - The TPM **does not prevent** a malicious bootloader from running — if someone tampers with the boot chain, the system still boots.
@@ -193,4 +166,4 @@ In short: the TPM says "I won't stop you, but I will tell everyone what you did.
 - [TCG — TPM 2.0 Keys for Device Identity and Attestation](https://trustedcomputinggroup.org/wp-content/uploads/TPM-2p0-Keys-for-Device-Identity-and-Attestation_v1_r12_pub10082021.pdf)
 - [Red Hat — Encrypting Block Devices Using LUKS](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/security_hardening/encrypting-block-devices-using-luks_security-hardening)
 - [TCG — TPM 2.0 Library Part 0: Introduction (official spec)](https://trustedcomputinggroup.org/wp-content/uploads/Trusted-Platform-Module-2.0-Library-Part-0-Introduction_Version-185_pub.pdf) — for a deeper look at TPM internals (certification, attestation hierarchy, integrity measurement, protected locations)
-- https://blog.tartarefr.eu/fr/blog/dechiffrer-disque-luks-avec-tpm [kevin shared on discord]
+- [Phillipe Daouadi — Décrypter un disque LUKS avec TPM](https://blog.tartarefr.eu/fr/blog/dechiffrer-disque-luks-avec-tpm) — TPM-LUKS unlock walkthrough (French)
