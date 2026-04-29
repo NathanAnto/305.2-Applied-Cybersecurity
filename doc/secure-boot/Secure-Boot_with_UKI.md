@@ -10,6 +10,7 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
 3. Click on `Grab binary packages directly`.
 4. Download the `sbctl_x.yz-21.1_amd64.deb` package.
 5. Install the package using following command.
+
     ```bash
     sudo apt install ./sbctl_x.yz-21.1_amd64.deb
     ```
@@ -21,6 +22,8 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
 2. In `Security` section, click on `Reset to Setup Mode` and click `Yes`.
 3. Click on F10 to `Save and Exit` settings.
 
+> ⚠️ This step will delete all your OEM keys. Be sure to make a copy of them if needed.
+
 ### Check
 
 2. Run following command to check if the computer has the `Secure Boot disabled` and the `Setup Mode enabled`.
@@ -29,18 +32,17 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
     sbctl status
     ```
 
-## Create and enroll PK, KEK, db keys in the UEFI
+## Enroll PK, KEK, db keys in the UEFI
+Before enrolling, be sure that you have your own PK, KEK and db key pair, they could be created via `openssl` or `sbctl` for simplification.
 
 ### Steps
-1. Run the following command.
-    ```bash
-    sbctl create-keys
-    ```
-2. Run the following command (If you want to keep Microsoft's keys).
+1. Run the following command (If you want to keep Microsoft's keys).
+
     ```bash
     sbctl enroll-keys --microsoft
     ```
-3. Otherwise, run this command
+2. Otherwise, run this command.
+
     ```bash
     sbctl enroll-keys
     ```
@@ -51,6 +53,7 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
 1. Insert your external USB.
 2. Check what is the path to the external USB using `lsblk`.
 3. Run the following command.
+
     ```bash
     mv /var/lib/sbctl/keys/* /mnt/
     ```
@@ -59,33 +62,41 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
 
 ### Steps
 1. Install `ukify` package.
+
     ```bash
     sudo apt install systemd-ukify
     ```
 2. Insert your USB key containing your PK, KEK and db key pairs.
-3. Check what is the path to it using `lsblk`.
-4. Run following command to create a single .efi file which will be used for boot.
+3. Mount the USB key if needed, for example `/mntX`.
+4. Run the following script to create a single .efi file which will be used for boot.
 
     ```bash
-    ukify build \
-    --linux=/boot/vmlinuz \
-    --initrd=/boot/initrd.img \
-    --cmdline='quiet rw' \
-    --secureboot-private-key=/mnt/db/db.key \
-    --secureboot-certificate=/mnt/db/db.pem \
-    --os-release=@/etc/os-release \
-    --output=/boot/efi/EFI/Linux/3052_uki.efi
+    sudo ./ukify.sh
     ```
+
+## Add the Unified Kernel Image in the boot order
+
+### Steps
+1. Run the following script to sign the UKI.
+
+    ```bash
+    sudo ./add_boot.sh
+    ```
+2. Delete other boot options. 
+
+    ```bash
+    sudo efibootmgr -b XXXX -B
+    ```
+
+> `XXXX` is the boot order ID which were not be used, for example, `shimx64.efi`, etc.
 
 ## Bind LUKS with Tang Server and TPM module
 
 ### Steps
 1. Make sure that the Tang server is findable by the client's computer.
 2. Run the following script.
+
     ```bash
     sudo bash script.sh
     ```
 3. Insert the LUKS2 passphrase if needed.
-
-## Change Boot order
-
