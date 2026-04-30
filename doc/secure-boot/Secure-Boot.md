@@ -43,6 +43,8 @@ graph TD
 ## How to enable/disable
 To change Secure Boot status, see the tutorial in the [Secure-Boot_tutorial.md](Secure-Boot_tutorial.md) file.
 
+To activate Secure boot for NBDE, see the tutorial in [Secure-Boot_with_UKI.md](Secure-Boot_with_UKI.md) file.
+
 ## Advantages of Secure Boot
 - It eliminates the execution of malicious data on our system. It ensures that only authenticated and unaltered components are loaded during the boot process to main system's integrity.
 - It prevents unauthorized modification to the boot process.
