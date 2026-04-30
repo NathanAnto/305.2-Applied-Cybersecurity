@@ -34,7 +34,7 @@ sbctl status
 Our repository contains scripts that will facilitate the UKI creation, adding the UKI image as a bootable as well as binding Tang server using Clevis.
 
 ### Steps
-Give an execution right on all scripts contained in `cd 305.2-Applied-Cybersecurity/MVP/scripts` directory.
+Give an execution right on all scripts contained in `305.2-Applied-Cybersecurity/MVP/scripts` directory.
 ```bash
 sudo chmod +x 305.2-Applied-Cybersecurity/MVP/scripts/*.sh
 ```
