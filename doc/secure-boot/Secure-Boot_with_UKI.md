@@ -10,7 +10,6 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
 3. Click on `Grab binary packages directly`.
 4. Download the `sbctl_x.yz-21.1_amd64.deb` package.
 5. Install the package using following command.
-
     ```bash
     sudo apt install ./sbctl_x.yz-21.1_amd64.deb
     ```
@@ -27,7 +26,6 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
 ### Check
 
 2. Run following command to check if the computer has the `Secure Boot disabled` and the `Setup Mode enabled`.
-
     ```bash
     sbctl status
     ```
@@ -37,7 +35,6 @@ Before enrolling, be sure that you have your own PK, KEK and db key pair, they c
 
 ### Steps
 1. Run the following script to enroll our keys.
-
     ```bash
     sudo bash enroll.keys.sh
     ```
@@ -46,14 +43,12 @@ Before enrolling, be sure that you have your own PK, KEK and db key pair, they c
 
 ### Steps
 1. Install `ukify` package.
-
     ```bash
     sudo apt install systemd-ukify
     ```
 2. Insert your USB key containing your PK, KEK and db key pairs.
 3. Mount the USB key if needed, for example `/mntX`.
 4. Run the following script to create a single .efi file which will be used for boot.
-
     ```bash
     sudo ./ukify.sh
     ```
@@ -62,12 +57,10 @@ Before enrolling, be sure that you have your own PK, KEK and db key pair, they c
 
 ### Steps
 1. Run the following script to sign the UKI.
-
     ```bash
     sudo ./add_boot.sh
     ```
 2. Delete other boot options. 
-
     ```bash
     sudo efibootmgr -b XXXX -B
     ```
@@ -85,7 +78,6 @@ Before enrolling, be sure that you have your own PK, KEK and db key pair, they c
 ### Steps
 1. Make sure that the Tang server is findable by the client's computer.
 2. Run the following script.
-
     ```bash
     sudo bash script.sh
     ```
