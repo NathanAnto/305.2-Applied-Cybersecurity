@@ -114,7 +114,7 @@ For example :
 You can see more about [here](https://kernel-team.pages.debian.net/kernel-handbook/ch-modules.html) and [here](https://wiki.archlinux.org/title/Kernel_module)
 
 
-
+<!---
 ## Setup Clevis+Tang LUKS encryption
 
 ***We assume here that the computer is already LUKS encrypted from the os installation configuration.***
@@ -132,6 +132,7 @@ update-initramfs -u -k all` in the terminal
 
 The [clean.sh](../../scripts/CLEVIS-LUKS/clean.sh) is used to clean the custom files in the initramfs , don't forget to unbind the tang-server from clevis (if necessary)
 
+-->
 ## Does a OS Update overwrite custom initramfs modification ?
 
 The files that are manually placed in /etc/initramfs-tools are preserved across OS updates. When the initramfs is rebuilt (e.g., after an update), these files such as the scripts and hooks used in our solution, are automatically included again, so this is not an issue.
