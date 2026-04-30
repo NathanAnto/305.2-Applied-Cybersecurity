@@ -36,26 +36,10 @@ To enable the Secure Boot with signed Unified Kernel Image, we have used an open
 Before enrolling, be sure that you have your own PK, KEK and db key pair, they could be created via `openssl` or `sbctl` for simplification.
 
 ### Steps
-1. Run the following command (If you want to keep Microsoft's keys).
+1. Run the following script to enroll our keys.
 
     ```bash
-    sbctl enroll-keys --microsoft
-    ```
-2. Otherwise, run this command.
-
-    ```bash
-    sbctl enroll-keys
-    ```
-
-## Move PK, KEK, db keys on a external USB
-
-### Steps
-1. Insert your external USB.
-2. Check what is the path to the external USB using `lsblk`.
-3. Run the following command.
-
-    ```bash
-    mv /var/lib/sbctl/keys/* /mnt/
+    sudo bash enroll.keys.sh
     ```
 
 ## Create Unified Kernel Image
@@ -90,6 +74,12 @@ Before enrolling, be sure that you have your own PK, KEK and db key pair, they c
 
 > `XXXX` is the boot order ID which were not be used, for example, `shimx64.efi`, etc.
 
+## Activate Secure Boot
+### Steps
+1. Enter UEFI in the laptop (Power ON + click on F2).
+2. In `Security` section, click on `Secure Boot` and choose `Enabled`.
+3. Click on F10 to `Save and Exit` settings.
+
 ## Bind LUKS with Tang Server and TPM module
 
 ### Steps
@@ -100,3 +90,7 @@ Before enrolling, be sure that you have your own PK, KEK and db key pair, they c
     sudo bash script.sh
     ```
 3. Insert the LUKS2 passphrase if needed.
+4. Recreate an UKI and resign it. Follow [Create Unified Kernel Image](#create-unified-kernel-image) and [Add the Unified Kernel Image in the boot order
+](#add-the-unified-kernel-image-in-the-boot-order).
+
+> Ensure to delete old .efi with `efibootmgr` to avoid confusion.
