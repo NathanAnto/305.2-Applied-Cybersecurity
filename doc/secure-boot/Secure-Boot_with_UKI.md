@@ -134,3 +134,8 @@ sudo bash install.sh
 ```
 3. Insert the LUKS2 passphrase if needed.
 4. Recreate an UKI and resign it. Follow [Create Unified Kernel Image, step 4](#create-unified-kernel-image).
+
+## Sources
+- [Ukify](https://www.freedesktop.org/software/systemd/man/latest/ukify.html)
+- [sbctl](https://github.com/foxboron/sbctl)
+- [Gemini](https://gemini.google.com/), used to debug with the UKI creation, exactly for `--cmdline` with LUKS UUIDs.
