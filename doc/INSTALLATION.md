@@ -22,13 +22,10 @@ Build and start the container:
 
 ```sh
 # Build the image
-docker build -t tang_server -f Dockerfile.tang .
+docker build -t tang_server -f ./mvp/docker/Dockerfile ./mvp/docker/
 
-# Run the container (with a persistent volume for keys)
-docker run -d --name tang-server \
-  -p 7500:7500 \
-  -v tang-keys:/var/db/tang \
-  tang_server
+# Run the container with a volume for keys
+docker run -d --name tang-server -p 7500:7500 -v tang-keys:/var/db/tang tang_server
 ```
 
 > Keys are generated automatically on first startup and persisted in the `tang-keys` volume.
