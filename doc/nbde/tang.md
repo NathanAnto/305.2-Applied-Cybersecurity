@@ -14,6 +14,8 @@ Tang performs 2 steps:
 
 ## McCallum-Relyea
 
+When we communicate with a Tang server from a client (Clevis), we don't want someone to be able to read the traffic in between them. That's where McCallum-Relyea comes in.
+
 McCallum-Relyea key exchange is an alternative method to [key escrow](https://en.wikipedia.org/wiki/Key_escrow) that allows the regeneration of a decryption key without requiring its retrieval. This algorithm is an advanced version of the Diffie-Hellman key exchange algorithm.
 
 ![](images/secret_key_regen_process.png)
@@ -36,9 +38,11 @@ The McCallum-Relyea exchange is designed to be anonymous. The Tang server does n
 
 To perform the unlock, the client (Clevis) must store a "header" (JWE) on the disk that contains the public key ($a = g^A$) and the encrypted secret.
 
+Or if an employee is fired, they can leave with the Tang encryption keys, meaning the private keys can be "out in the wild" for anyone to find.
+
 **The Vulnerability**: If the server's private key is ever compromised, any attacker who has collected these JWE headers from various machines can decrypt all of them offline.
 
-**The Mitigation**: By periodically rotating the Tang server's keys and re-keying the clients, you limit the "blast radius" of a potential server-side key compromise.
+**The Mitigation**: By periodically rotating the Tang server's keys and re-keying the clients, you limit the "blast radius" of a potential server-side key compromise. This can be done, but required that all other clients bind to the new clients before being able to delete the compromised keys.
 
 # Sources
 

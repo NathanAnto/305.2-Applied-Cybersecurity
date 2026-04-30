@@ -1,6 +1,9 @@
-# Clevis and Tang as a Key Management System (KMS)
+# Clevis and Tang for Network Based Disk Encryption (NBDE)
+***By Nathan Antonietti - 305.2 : Cybersecurity***
 
 Strictly speaking, Tang isn't a KMS because it doesn't store anything, it is stateless. But for our specific project, it's a good solution to use **Clevis** for automated encryption and a **Tang** server for decryption in LAN. This method is called Network-Bound Disk Encryption (NBDE).
+
+For our example, we split our secret into 2 shares that are both required, but when using Clevis, you can define as many shares as you like, while defining the minimum amount of shares necessary to unlock the secret.
 
 1. Initramfs loads: Ubuntu starts the network stack and the TPM driver.
 2. Clevis initiates [SSS](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing): It sees the LUKS2 JSON token and realizes it needs two shares to unlock the drive.
@@ -12,13 +15,15 @@ Strictly speaking, Tang isn't a KMS because it doesn't store anything, it is sta
 
 ## What is Clevis
 
-Clevis is an encryption automation tool that uses luks encryption.
+Clevis is an encryption automation tool that uses LUKS encryption. It is used during the initramfs phase to automate disk encryption using pins, which is the name for the TPM or/and Tang backends.
+
+By default, dm-crypt doesn't use the TPM. With Clevis we can use the TPM by defining the PCR Registers we want to watch (more about the TPM [here](../tpm/tpm.md)).
 
 ## What is Tang
 
 Tang is a server for binding data to a network presence, so in our case, it helps us force a system to have access to the Tang server, before being able to decrypt the drive.
 
-Tang was made to work with Clevis, so integration with both is simple.
+Tang was made to work with Clevis, so integration with both is simple. Learn more about Tang [here](../nbde/tang.md)
 
 ## Setup
 
@@ -62,7 +67,8 @@ This can be done in a systemd service that is enabled on startup.
 
 ### Clevis
 
-Bind the device to the TPM (pcr 7) and to the Tang server.
+Bind the device to the TPM (PCR 7) and to the Tang server.
+
 ```sh
 sudo clevis luks bind -d /dev/sdX sss \
 '{
@@ -73,6 +79,8 @@ sudo clevis luks bind -d /dev/sdX sss \
   }
 }'
 ```
+
+PCR 7 is the hash for Secure Boot, meaning that if the Secure Boot changes state after the bind, Clevis won't decrypt the disk. More info about PCRs [here](../tpm/tpm_doc.md#platform-configuration-registers-pcrs)
 
 ```sh
 sudo clevis luks unlock -d /dev/sdb -n usb_crypt
