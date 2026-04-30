@@ -4,14 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$SCRIPT_DIR/config.env"
-# source "$SCRIPT_DIR/lib/log.sh"
+source "$SCRIPT_DIR/lib/log.sh"
 
 # Find device that is in LUKS Format
 TARGET_DEV="/dev/$(lsblk -lo NAME,FSTYPE | awk '$2 == "crypto_LUKS" {print $1}')"
 
 if [ "${#TARGET_DEV}" -lt 5 ]; then
     echo "No LUKS device found."
-    # TODO: run reencrypt on next boot
     exit 1
 fi
 
@@ -32,7 +31,7 @@ apt-get update && apt-get install -y cryptsetup clevis clevis-luks clevis-tpm2 c
 cp ./lib/clevis-network.sh /etc/initramfs-tools/hooks/clevis-network
 chmod +x /etc/initramfs-tools/hooks/clevis-network
 
-# log_info "Installing NBDE rebind service…"
+log_info "Installing NBDE rebind service…"
  
 # Write runtime env file — systemd injects LUKS_DEVICE into the script at boot
 mkdir -p "$(dirname "$NBDE_ENV_FILE")"
@@ -46,7 +45,7 @@ install -Dm 644 "$SCRIPT_DIR/units/nbde-rebind.service" \
 install -Dm 755 "$SCRIPT_DIR/scripts/nbde-rebind-check.sh" \
     "${SCRIPTS_INSTALL_DIR}/nbde-rebind-check.sh"
 
-# log_info "Unit and script installed."
+log_info "Unit and script installed."
 
 # -----------------------------------------------------------------------------
 # Static IP for initramfs (network unlock)
@@ -54,7 +53,7 @@ install -Dm 755 "$SCRIPT_DIR/scripts/nbde-rebind-check.sh" \
 mkdir -p /etc/initramfs-tools/conf.d/
 echo "IP=${IP_ADDR}::${GATEWAY}:${NETMASK}::${IFACE}:off" > /etc/initramfs-tools/conf.d/static_ip
 
-# log_info "Rebuilding initramfs…"
+log_info "Rebuilding initramfs…"
 
 update-initramfs -u -k all
 
@@ -73,4 +72,4 @@ fi
 
 systemctl enable --now "$SERVICE_NAME"
 
-# log_info "Installation complete."
+log_info "Installation complete."
