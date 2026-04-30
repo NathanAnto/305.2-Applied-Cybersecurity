@@ -22,13 +22,10 @@ Build and start the container:
 
 ```sh
 # Build the image
-docker build -t tang_server -f Dockerfile.tang .
+docker build -t tang_server -f ./mvp/docker/Dockerfile ./mvp/docker/
 
-# Run the container (with a persistent volume for keys)
-docker run -d --name tang-server \
-  -p 7500:7500 \
-  -v tang-keys:/var/db/tang \
-  tang_server
+# Run the container with a volume for keys
+docker run -d --name tang-server -p 7500:7500 -v tang-keys:/var/db/tang tang_server
 ```
 
 > Keys are generated automatically on first startup and persisted in the `tang-keys` volume.
@@ -37,28 +34,37 @@ docker run -d --name tang-server \
 
 ## 2. Ubuntu client
 
-### 2.1 Adapt the configuration script
+### 2.1 Install Ubuntu with LUKS activated
 
-Before running the script, open `script.sh` and update the following variables to match your environment:
+### 2.2 Clone the repository
+Please clone the `NathanAnto/305.2-Applied-Cybersecurity` repository.
 
 ```bash
-TARGET_DEV="/dev/nvme0n1p3"          # LUKS2 partition to unlock
-TANG_URL="http://192.168.10.6:7500"  # Tang server IP and port
-IP_ADDR="192.168.10.2"               # Client static IP used in initramfs
-NETMASK="255.255.255.0"
+git clone https://github.com/NathanAnto/305.2-Applied-Cybersecurity
+```
+
+### 2.3 Adapt the configuration script
+
+Before running any script, open `MVP/config.env` and update the following variables to match your environment:
+
+```bash
+TANG_SERVER_URL="http://192.168.10.6:7500"
+
+# Network (used for static IP in initramfs)
 GATEWAY="192.168.10.1"
+NETMASK="255.255.255.0"
+
+# Systemd service (name must match the .service unit filename)
+SERVICE_NAME="nbde-rebind"
+ 
+# Install paths
+NBDE_ENV_FILE="/etc/default/nbde"
+SCRIPTS_INSTALL_DIR="/usr/local/lib/nbde"
+UNIT_INSTALL_DIR="/etc/systemd/system"
+
+# Logging tag (for logger / journald)
+LOG_TAG="nbde"
 ```
 
-### 2.2 Run the installation script
-
-```sh
-sudo bash script.sh
-```
-
-The script performs the following steps:
-
-1. Installs the required packages
-2. Installs the network hook into initramfs (`/etc/initramfs-tools/hooks/clevis-network`)
-3. Configures a static IP for the initramfs phase (`/etc/initramfs-tools/conf.d/static_ip`)
-4. Prompts to perform the Clevis binding (TPM2 + Tang via SSS)
-5. Regenerates the initramfs (`update-initramfs -u -k all`)
+### 2.4 Secure boot
+To enable secure boot on the laptop and finish the configuration, open and do all steps from [Secure-Boot_with_UKI.md](secure-boot/Secure-Boot_with_UKI.md) document.

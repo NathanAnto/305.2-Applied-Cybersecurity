@@ -30,15 +30,11 @@ Run following command to check if the computer has the `Secure Boot disabled` an
 sbctl status
 ```
 
-## Clone this repository
+## Add execution rights to all scripts from MVP/scripts
 Our repository contains scripts that will facilitate the UKI creation, adding the UKI image as a bootable as well as binding Tang server using Clevis.
 
 ### Steps
-1. Clone the [NathanAnto/305.2-Applied-Cybersecurity](https://github.com/NathanAnto/305.2-Applied-Cybersecurity) repository on your computer.
-```bash
-git clone https://github.com/NathanAnto/305.2-Applied-Cybersecurity
-```
-2. Give an execution right on all scripts contained in `cd 305.2-Applied-Cybersecurity/MVP/scripts` directory.
+Give an execution right on all scripts contained in `305.2-Applied-Cybersecurity/MVP/scripts` directory.
 ```bash
 sudo chmod +x 305.2-Applied-Cybersecurity/MVP/scripts/*.sh
 ```
