@@ -1,4 +1,4 @@
-# LUKS Encryption
+# LUKS2 Encryption
 ***By Kevin Voisin - 305.2 : Cybersecurity***
 
 ## 1. LUKS 
@@ -6,11 +6,11 @@ LUKS who stands for 'Linux Unified Key Setup' is the standard involved in the Li
 It allows to encrypt the entire disk, it supports multiple password/passphrase so that multiple users can access the same disk without sharing their password.
 
 ### 1.1 What is it ?
-It provides a generic key store on the dedicated area on a disk, with the ability to use multiple passphrases to unlock a stored key.LUKS(LUKS2) has a more flexible way of storing metada.
+It provides a generic key store on the dedicated area on a disk, with the ability to use multiple passphrases to unlock a stored key.LUKS(LUKS2) has a more flexible way of storing metadata.
 
 ### 1.1.1 LUKS Header
 
-LUKS header provides metada for encryption setup. The followings are some of the features:
+LUKS header provides metadata for encryption setup. The followings are some of the features:
 
 - Checksum mechanism to detect corruption and manipulation in header
 - Metadata area is stored in two copies for a possible recovery
