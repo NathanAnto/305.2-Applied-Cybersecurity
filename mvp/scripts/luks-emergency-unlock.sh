@@ -37,3 +37,5 @@ fi
 
 # Clear the secret from memory
 unset RECONSTRUCTED_SECRET
+
+# Made with the help of Gemini

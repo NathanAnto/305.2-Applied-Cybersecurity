@@ -44,3 +44,5 @@ echo "[!] Once you have safely stored the shares, clear your terminal history."
 
 # Clear the variable from memory
 unset RECOVERY_KEY
+
+# Made with the help of Gemini
