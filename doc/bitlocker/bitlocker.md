@@ -25,7 +25,7 @@ Three authentification mechanisms can be used as building blocks to implement Bi
 ## Operation
 At least two NTFS-formatted partitions are required, one for the operating system and another with a minimum size of 100 MB, which remains unencrypted and boots the operating system.
 
-Once an alternate boot partition has been created, the TPM module needs to be initialized, after which the required disk encryption key is protection mechanisms such as TPM are configured.
+Once an alternate boot partition is created, the TPM is initialized, and the disk encryption key is then secured using protection mechanisms such as the TPM.
 
 The volume is then encrypted as a background task. The keys are only protected after the whole volume has been encrypted.
 
