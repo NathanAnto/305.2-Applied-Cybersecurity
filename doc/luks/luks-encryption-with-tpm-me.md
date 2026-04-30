@@ -1,4 +1,4 @@
-# Using LUKS with TPM
+# LUKS Encryption
 ***By Kevin Voisin - 305.2 : Cybersecurity***
 
 ## 1. LUKS 
@@ -136,19 +136,6 @@ Encryption Process:
 - KEK decrypts the master key from key slot
 - Master key decrypts/encrypts actual disk data
 - All operations happen transparently via dm-crypt
-
-
-
-## 2. TPM
-
-### What is it ?
-
-### What it is used for ?
-
-
-## 3. Our Use-case : LUKS Encryption/Decryption process with TPM 2.0
-
-
 
 # Sources
 
