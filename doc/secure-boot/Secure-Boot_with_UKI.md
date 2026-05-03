@@ -70,9 +70,10 @@ To ensure, that only our Kernel and initramfs is booted, we need to create an UK
 It avoids that initramfs or Kernel is tampered. If it is the case, the computer won't boot in the .efi.
 
 ### Steps
-1. Install `ukify` package.
+1. Install `ukify` and `systemd-boot-efi` packages.
 ```bash
 sudo apt install systemd-ukify
+sudo apt install systemd-boot-efi
 ```
 2. Insert your USB key containing your PK, KEK and db key pairs.
 3. Mount the USB key if needed, for example `/mntX`.
@@ -101,12 +102,16 @@ sudo efibootmgr -b XXXX -B
 The computer should boot on our Unified Kernel Image `3052_uki.efi`. To do that follow those steps.
 
 ### Steps
-1. Check all boot possibilities with `efibootmgr`.
+1. Create the `/boot/efi/EFI/Linux` folder if needed.
+```bash
+sudo mkdir /boot/efi/EFI/Linux
+```
+2. Check all boot possibilities with `efibootmgr`.
 ```bash
 sudo efibootmgr
 ```
-2. Check `BootOrder`, the `3052_uki.efi` should be the first one.
-3. If it is not the case, enter the following command to change the boot order.
+3. Check `BootOrder`, the `3052_uki.efi` should be the first one.
+4. If it is not the case, enter the following command to change the boot order.
 ```bash
 sudo efibootmgr -o XXXX,XXXY,XXXZ
 ```
@@ -125,7 +130,7 @@ sudo efibootmgr -o XXXX,XXXY,XXXZ
 1. Make sure that the Tang server is findable by the client's computer.
 2. Run the following script.
 ```bash
-cd 305.2-Applied-Cybersecurity/MVP/scripts
+cd 305.2-Applied-Cybersecurity/MVP
 sudo bash install.sh
 ```
 3. Insert the LUKS2 passphrase if needed.
